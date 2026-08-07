@@ -210,14 +210,12 @@
         let firebaseConfig;
         
         try {
-            firebaseConfig = {
-  apiKey: "AIzaSyD7Hfi4b4tGV3_5Q5iMg4dsOGX3IUxzaVA",
-  authDomain: "robocaf-inven-2b89d.firebaseapp.com",
-  projectId: "robocaf-inven-2b89d",
-  storageBucket: "robocaf-inven-2b89d.firebasestorage.app",
-  messagingSenderId: "206580148947",
-  appId: "1:206580148947:web:0ab87328c952dbb555c226"
-};
+            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+                /* Mock config for local testing if env vars are missing */
+                projectId: "mock-project", 
+                apiKey: "mock-key",
+                authDomain: "mock.firebaseapp.com"
+            };
         } catch(e) {
             console.error("Firebase config parsing error", e);
             // Fallback for visual rendering if config fails
@@ -371,23 +369,92 @@
             }
         }
 
-        function loadDefaultData() {
-            // Default setup for a brand new store
-            inventoryData = [
-                { category: "원두", name: "타이틀", standard: 5, current: 3, inbound: 0 },
-                { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 },
-                { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-                { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
-                { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
-                { category: "파우더", name: "농축밀크", standard: 7, current: 3, inbound: 0 },
-                { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 },
-                { category: "파우더", name: "허니자몽", standard: 5, current: 5, inbound: 0 },
-                { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
-            ];
-            // Request 1: Cleared past sample data
-            historyLogs = {}; 
-            updateUIFromData();
-        }
+       function loadDefaultData() {
+    // 1. 현재 재고 현황 기본값 (최신일인 8/6 기준 데이터로 세팅)
+    inventoryData = [
+        { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 },
+        { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 },
+        { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+        { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
+        { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
+        { category: "파우더", name: "농축밀크", standard: 7, current: 2, inbound: 0 },
+        { category: "파우더", name: "초코", standard: 5, current: 2, inbound: 0 },
+        { category: "파우더", name: "허니자몽", standard: 5, current: 4, inbound: 0 },
+        { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+    ];
+
+    // 2. 7/31 ~ 8/6 전체 이력 데이터를 기본 장착
+    historyLogs = {
+        "2026-07-31": [
+            { category: "원두", name: "타이틀", standard: 5, current: 8, inbound: 0 },
+            { category: "원두", name: "성수", standard: 5, current: 9, inbound: 0 },
+            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "바닐라", standard: 2, current: 4, inbound: 0 },
+            { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 },
+            { category: "파우더", name: "농축밀크", standard: 7, current: 8, inbound: 0 },
+            { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 },
+            { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 },
+            { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
+        ],
+        "2026-08-01": [
+            { category: "원두", name: "타이틀", standard: 5, current: 7, inbound: 0 },
+            { category: "원두", name: "성수", standard: 5, current: 8, inbound: 0 },
+            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 },
+            { category: "파우더", name: "농축밀크", standard: 7, current: 7, inbound: 0 },
+            { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 },
+            { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 },
+            { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
+        ],
+        "2026-08-03": [
+            { category: "원두", name: "타이틀", standard: 5, current: 6, inbound: 0 },
+            { category: "원두", name: "성수", standard: 5, current: 7, inbound: 0 },
+            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 },
+            { category: "파우더", name: "농축밀크", standard: 7, current: 6, inbound: 0 },
+            { category: "파우더", name: "초코", standard: 5, current: 4, inbound: 0 },
+            { category: "파우더", name: "허니자몽", standard: 5, current: 7, inbound: 0 },
+            { category: "파우더", name: "미숫가루", standard: 5, current: 5, inbound: 0 }
+        ],
+        "2026-08-04": [
+            { category: "원두", name: "타이틀", standard: 5, current: 5, inbound: 0 },
+            { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 },
+            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
+            { category: "파우더", name: "농축밀크", standard: 7, current: 4, inbound: 0 },
+            { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 },
+            { category: "파우더", name: "허니자몽", standard: 5, current: 6, inbound: 0 },
+            { category: "파우더", name: "미숫가루", standard: 5, current: 4, inbound: 0 }
+        ],
+        "2026-08-05": [
+            { category: "원두", name: "타이틀", standard: 5, current: 3, inbound: 0 },
+            { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 },
+            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
+            { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
+            { category: "파우더", name: "농축밀크", standard: 7, current: 3, inbound: 0 },
+            { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 },
+            { category: "파우더", name: "허니자몽", standard: 5, current: 5, inbound: 0 },
+            { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+        ],
+        "2026-08-06": [
+            { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 },
+            { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 },
+            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+            { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
+            { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
+            { category: "파우더", name: "농축밀크", standard: 7, current: 2, inbound: 0 },
+            { category: "파우더", name: "초코", standard: 5, current: 2, inbound: 0 },
+            { category: "파우더", name: "허니자몽", standard: 5, current: 4, inbound: 0 },
+            { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+        ]
+    };
+
+    updateUIFromData();
+}
 
         function updateUIFromData() {
             renderCategoryFilters();
@@ -471,61 +538,75 @@
         }
 
         // Request 4: Improved Consumption Analysis accounting for inbound stock
-        function analyzeConsumption() {
-            const sortedDates = Object.keys(historyLogs).sort();
-            if (sortedDates.length < 2) return null;
+       function analyzeConsumption() {
+    const sortedDates = Object.keys(historyLogs).sort();
+    if (sortedDates.length < 2) return null;
 
-            let totalValidDays = 0;
-            let itemConsumption = {};
+    let itemConsumption = {};
+    inventoryData.forEach(item => itemConsumption[item.name] = 0);
 
-            inventoryData.forEach(item => itemConsumption[item.name] = 0);
+    let totalValidDays = 0;
+    const targetValidDays = 10; // 최근 10일의 영업일 기준
+    
+    // 뒤쪽(최신 날짜)부터 거꾸로 탐색하며 최근 10일의 영업일을 채움
+    let validDaysCount = 0;
+    let usedDates = [];
 
-            for (let i = 0; i < sortedDates.length - 1; i++) {
-                const date1 = new Date(sortedDates[i]);
-                const date2 = new Date(sortedDates[i+1]);
-                const log1 = historyLogs[sortedDates[i]]; // Previous Record
-                const log2 = historyLogs[sortedDates[i+1]]; // Next Record
+    for (let i = sortedDates.length - 1; i > 0; i--) {
+        const date2Str = sortedDates[i];
+        const date1Str = sortedDates[i - 1];
+        
+        const date1 = new Date(date1Str);
+        const date2 = new Date(date2Str);
 
-                let days = 0;
-                let currDate = new Date(date1);
-                currDate.setDate(currDate.getDate() + 1);
-                
-                while (currDate <= date2) {
-                    if (currDate.getDay() !== 0) { // Exclude Sundays from averages
-                        days++;
-                    }
-                    currDate.setDate(currDate.getDate() + 1);
-                }
-                if(days === 0) days = 1; // Prevent division by zero if dates are same or only weekend
-                totalValidDays += days;
+        let currentDaysInInterval = 0;
+        let currDate = new Date(date1);
+        currDate.setDate(currDate.getDate() + 1);
 
-                log1.forEach(item1 => {
-                    const item2 = log2.find(i => i.name === item1.name);
-                    if (item2) {
-                        // NEW LOGIC: Total Consumed = (Prev Current + Today Inbound) - Today Current
-                        const inbound = item2.inbound || 0; 
-                        const theoreticalStock = item1.current + inbound;
-                        const consumed = theoreticalStock - item2.current;
-                        
-                        if (consumed > 0) {
-                            itemConsumption[item1.name] = (itemConsumption[item1.name] || 0) + consumed;
-                        }
-                    }
-                });
+        // 두 날짜 사이의 영업일(일요일 제외) 계산
+        while (currDate <= date2) {
+            if (currDate.getDay() !== 0) { // 일요일(0)이 아니면 영업일로 인정
+                currentDaysInInterval++;
             }
-
-            let stats = {};
-            inventoryData.forEach(item => {
-                const totalConsumed = itemConsumption[item.name] || 0;
-                const dailyAvg = totalValidDays > 0 ? (totalConsumed / totalValidDays) : 0;
-                stats[item.name] = {
-                    dailyAvg: dailyAvg,
-                    safeStock: dailyAvg * 3
-                };
-            });
-            return { totalValidDays, stats };
+            currDate.setDate(currDate.getDate() + 1);
         }
 
+        if (currentDaysInInterval > 0) {
+            const log1 = historyLogs[date1Str];
+            const log2 = historyLogs[date2Str];
+
+            log1.forEach(item1 => {
+                const item2 = log2.find(i => i.name === item1.name);
+                if (item2) {
+                    const inbound = item2.inbound || 0; 
+                    const consumed = (item1.current + inbound) - item2.current;
+                    if (consumed > 0) {
+                        itemConsumption[item1.name] = (itemConsumption[item1.name] || 0) + consumed;
+                    }
+                }
+            });
+
+            totalValidDays += currentDaysInInterval;
+            validDaysCount++;
+        }
+
+        // 최근 10일치 영업일 분량이 채워지면 중단
+        if (totalValidDays >= targetValidDays) break;
+    }
+
+    let stats = {};
+    inventoryData.forEach(item => {
+        const totalConsumed = itemConsumption[item.name] || 0;
+        // 누적된 유효 영업일이 0보다 크면 그 일수로 나누고, 아니면 0 처리
+        const dailyAvg = totalValidDays > 0 ? (totalConsumed / totalValidDays) : 0;
+        stats[item.name] = {
+            dailyAvg: dailyAvg,
+            safeStock: dailyAvg * 3
+        };
+    });
+    
+    return { totalValidDays, stats };
+}
         function renderInventory() {
             const listContainer = document.getElementById('inventory-list');
             listContainer.innerHTML = '';
@@ -654,24 +735,25 @@
             }, 300);
         }
 
-        function applyBatchInput() {
-            let hasChanges = false;
-            inventoryData.forEach((item, index) => {
-                const input = document.getElementById(`batch-input-${index}`);
-                const addAmount = parseInt(input.value) || 0;
-                if (addAmount > 0) {
-                    item.current += addAmount;
-                    item.inbound = (item.inbound || 0) + addAmount; // 누적 입고량 기록
-                    hasChanges = true;
-                }
-            });
-
-            if (hasChanges) {
-                saveDataToFirebase();
-                showToast("입고 수량이 반영되었습니다.");
-            }
-            closeBatchModal();
+       function applyBatchInput() {
+    let hasChanges = false;
+    inventoryData.forEach((item, index) => {
+        const input = document.getElementById(`batch-input-${index}`);
+        const addAmount = parseInt(input.value) || 0;
+        if (addAmount > 0) {
+            item.current += addAmount;
+            item.inbound = (item.inbound || 0) + addAmount; // 누적 입고량 기록
+            hasChanges = true;
         }
+    });
+
+    if (hasChanges) {
+        saveDataToFirebase();
+        renderInventory(); // ✨ 일괄 입고 후 재고 현황 화면을 즉시 새로고침
+        showToast("입고 수량이 반영되었습니다.");
+    }
+    closeBatchModal();
+}
 
 
         // Request 2: Save Inventory always targets 'Today'
