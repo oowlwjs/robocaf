@@ -314,42 +314,47 @@
             }
         }
 
-        function setupRealtimeSync() {
+function setupRealtimeSync() {
             if (!auth.currentUser) return;
 
-            // Rule 1: Strict Paths - Using public/data for shared inventory state
             const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory_state', 'main');
             
-            // Listen for changes from any user
             onSnapshot(stateRef, (docSnap) => {
                 document.getElementById('loading-overlay').classList.add('hidden');
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    
-                    // Decode stringified arrays to bypass complex merging issues
+                    let hasValidData = false;
+
                     if (data.inventoryString) {
                         try {
                             inventoryData = JSON.parse(data.inventoryString);
+                            hasValidData = true;
                         } catch(e) { console.error("Parse error inventory"); }
                     }
                     if (data.historyString) {
                         try {
                             historyLogs = JSON.parse(data.historyString);
+                            hasValidData = true;
                         } catch(e) { console.error("Parse error history"); }
                     }
-                    
-                    // Re-render UI
-                    updateUIFromData();
+
+                    // 만약 데이터가 없거나 파싱에 실패했다면 기본값 로드
+                    if (!hasValidData) {
+                        loadDefaultData();
+                    } else {
+                        updateUIFromData();
+                    }
                     
                 } else {
-                    // First time initialization for all users
+                    // 서버에 아예 데이터가 없을 때 기본값 로드 및 즉시 저장
                     loadDefaultData();
-                    saveDataToFirebase(); // Broadcast defaults
+                    saveDataToFirebase(); 
                 }
             }, (error) => {
                 console.error("Realtime sync error:", error);
-                showToast("데이터 동기화 오류 발생", "error");
+                loadDefaultData(); // 연동 오류 시 로컬 데이터라도 보이게
+                showToast("데이터 동기화 오류 발생 (로컬 모드)", "error");
             });
         }
 
