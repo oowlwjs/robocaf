@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로봇카페 재고관리 앱</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* 스크롤바 숨기기 (모바일 환경에서 가로 스크롤 깔끔하게) */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col relative">
+
+    <!-- Loading Overlay for Firebase Auth & Data Fetching -->
+    <div id="loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
+        <i class="fa-solid fa-spinner fa-spin text-3xl text-indigo-600 mb-3"></i>
+        <p class="text-sm font-semibold text-slate-600 animate-pulse">데이터 동기화 중...</p>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-robot text-xl"></i>
+                <h1 class="text-base font-bold">로봇카페 스마트 재고</h1>
+            </div>
+            <div class="text-[10px] bg-indigo-500 px-2 py-1 rounded-full flex items-center shadow-inner">
+                <span id="sync-status" class="w-2 h-2 rounded-full bg-emerald-400 mr-1 animate-pulse"></span>
+                실시간 연동중
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-white border-b border-slate-200 sticky top-[52px] z-40">
+        <div class="max-w-md mx-auto flex justify-around">
+            <button onclick="switchTab('inventory')" id="tab-inventory" class="flex-1 py-2.5 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600 text-center transition-colors">
+                <i class="fa-solid fa-boxes-stacked mr-1"></i> 재고 현황
+            </button>
+            <button onclick="switchTab('calendar')" id="tab-calendar" class="flex-1 py-2.5 text-sm font-semibold text-slate-500 border-b-2 border-transparent text-center transition-colors">
+                <i class="fa-solid fa-calendar-days mr-1"></i> 이력
+            </button>
+            <button onclick="switchTab('settings')" id="tab-settings" class="flex-1 py-2.5 text-sm font-semibold text-slate-500 border-b-2 border-transparent text-center transition-colors">
+                <i class="fa-solid fa-gear mr-1"></i> 설정
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-md w-full mx-auto p-3 flex-1 mb-20 relative space-y-3">
+
+        <!-- Tab 1: Inventory Management -->
+        <section id="view-inventory" class="space-y-2.5">
+            <div class="flex justify-between items-center bg-white p-2.5 rounded-xl shadow-sm border border-slate-100">
+                <div>
+                    <h2 class="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+                        <i class="fa-regular fa-calendar text-indigo-500"></i>
+                        <span id="today-date-display">오늘 날짜</span>
+                    </h2>
+                    <p class="text-[10px] text-slate-400 mt-0.5">수량 조절 후 꼭 저장버튼을 누르세요</p>
+                </div>
+                <div class="flex space-x-1.5">
+                    <button onclick="openBatchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium text-xs transition flex items-center gap-1 border border-slate-200">
+                        <i class="fa-solid fa-truck-ramp-box"></i> 입고
+                    </button>
+                    <button onclick="saveInventoryToHistory()" class="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-2.5 py-1.5 rounded-lg font-medium text-xs shadow-md transition flex items-center gap-1">
+                        <i class="fa-solid fa-floppy-disk"></i> 저장
+                    </button>
+                </div>
+            </div>
+
+            <div id="category-filters" class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
+                <!-- Category buttons will be injected here -->
+            </div>
+
+            <!-- Inventory Items Container -->
+            <div id="inventory-list" class="space-y-1.5">
+                <!-- Dynamic Items will be injected here -->
+            </div>
+        </section>
+
+        <!-- Tab 2: Calendar & History -->
+        <section id="view-calendar" class="hidden space-y-3">
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex justify-between items-end gap-2">
+                <div class="flex-1">
+                    <h2 class="font-bold text-slate-700 text-xs mb-1.5"><i class="fa-solid fa-calendar text-indigo-500 mr-1.5"></i>날짜 선택</h2>
+                    <input type="date" id="selected-date" onchange="loadHistoryForDate()" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button onclick="exportHistoryToCSV()" class="h-[38px] px-3 bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-file-csv"></i> 다운로드
+                </button>
+            </div>
+
+            <!-- Chart Container -->
+            <div id="chart-container" class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 hidden">
+                <h3 class="font-bold text-slate-700 text-xs mb-2"><i class="fa-solid fa-chart-simple text-indigo-500 mr-1.5"></i>재고 수준 그래프</h3>
+                <div class="h-44 w-full relative">
+                    <canvas id="inventory-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- History Editor Container -->
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-bold text-slate-700 text-xs flex items-center">
+                        이력 조회
+                        <span id="history-date-label" class="ml-2 text-[10px] font-normal px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">-</span>
+                    </h3>
+                    <div class="flex gap-1.5">
+                        <button id="btn-toggle-history-edit" onclick="toggleHistoryEditMode()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition items-center gap-1 border border-slate-200">
+                            <i class="fa-solid fa-pen"></i> 수정
+                        </button>
+                        <button id="btn-save-history-edit" onclick="saveEditedHistory()" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold shadow-sm transition items-center gap-1">
+                            <i class="fa-solid fa-check"></i> 저장
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="history-list" class="space-y-1.5">
+                    <p class="text-xs text-slate-400 text-center py-4">날짜를 선택하면 해당 일자의 재고 기록을 확인하고 수정할 수 있습니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Settings (Add/Remove Items) -->
+        <section id="view-settings" class="hidden space-y-3">
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                <h2 class="font-bold text-slate-700 text-xs mb-3"><i class="fa-solid fa-plus text-indigo-500 mr-1.5"></i>새 품목 추가 (전체 공유됨)</h2>
+                <div class="space-y-2">
+                    <input type="text" id="new-category" placeholder="카테고리 (예: 원두, 시럽)" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="new-name" placeholder="품목명 (예: 디카페인)" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="number" id="new-standard" placeholder="기준 수량" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="addItem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium text-xs transition shadow-sm">
+                        추가하기
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
+                <h2 class="font-bold text-slate-700 text-xs mb-2"><i class="fa-solid fa-trash text-red-500 mr-1.5"></i>품목 관리</h2>
+                <div id="settings-item-list" class="space-y-1.5">
+                    <!-- Items for deletion will be injected here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Batch Input Modal -->
+    <div id="batch-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex-col justify-end sm:justify-center items-center">
+        <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-4 max-h-[85vh] flex flex-col shadow-2xl transform transition-transform translate-y-full sm:translate-y-0 duration-300" id="batch-modal-content">
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="font-bold text-base text-slate-800"><i class="fa-solid fa-truck-ramp-box text-indigo-600 mr-2"></i>일괄 입고</h2>
+                <button onclick="closeBatchModal()" class="text-slate-400 hover:text-slate-600 w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
+                <p class="text-[10px] text-amber-700 leading-tight">입고된 수량을 입력해주세요. 입력한 수량은 당일 '소모량' 계산 시 보정치로 활용되며 현재 수량에 더해집니다.</p>
+            </div>
+
+            <div class="overflow-y-auto flex-1 pr-1 space-y-2 mb-3" id="batch-input-list">
+                <!-- Batch inputs injected here -->
+            </div>
+
+            <div class="mt-auto flex space-x-2 pt-3 border-t border-slate-100">
+                <button onclick="closeBatchModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium text-xs">취소</button>
+                <button onclick="applyBatchInput()" class="flex-[2] py-2.5 bg-indigo-600 text-white rounded-xl font-medium text-xs shadow-md">일괄 입고 적용</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Modal UI for Confirmations (replaces window.confirm) -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] hidden flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl scale-95 opacity-0 transition-all duration-200" id="confirm-modal-content">
+            <h3 id="confirm-title" class="font-bold text-sm text-slate-800 mb-2">확인</h3>
+            <p id="confirm-msg" class="text-xs text-slate-600 mb-4"></p>
+            <div class="flex space-x-2">
+                <button id="btn-confirm-cancel" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition">취소</button>
+                <button id="btn-confirm-ok" class="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium shadow transition">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Message -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur text-white px-4 py-2 rounded-xl text-xs shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-[70] flex items-center gap-2 border border-slate-700">
+        <i id="toast-icon" class="fa-solid fa-check-circle text-emerald-400 text-sm"></i>
+        <span id="toast-msg" class="font-medium">저장되었습니다.</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration provided by environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'robot-cafe-inventory-app';
+        let firebaseConfig;
+        
+        try {
+            firebaseConfig = {
+  apiKey: "AIzaSyD7Hfi4b4tGV3_5Q5iMg4dsOGX3IUxzaVA",
+  authDomain: "robocaf-inven-2b89d.firebaseapp.com",
+  projectId: "robocaf-inven-2b89d",
+  storageBucket: "robocaf-inven-2b89d.firebasestorage.app",
+  messagingSenderId: "206580148947",
+  appId: "1:206580148947:web:0ab87328c952dbb555c226"
+};
+        } catch(e) {
+            console.error("Firebase config parsing error", e);
+            // Fallback for visual rendering if config fails
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // State Variables
+        let inventoryData = []; // [{ category, name, standard, current }]
+        let historyLogs = {};   // { "YYYY-MM-DD": [{ name, category, standard, current, inbound }] }
+        let currentCategoryFilter = '전체';
+        let inventoryChart = null;
+        let isFirebaseReady = false;
+        let editingHistoryDate = null;
+        let editedHistoryData = [];
+        let isHistoryEditMode = false;
+
+        // Make functions globally available for HTML inline event handlers
+        window.switchTab = switchTab;
+        window.openBatchModal = openBatchModal;
+        window.closeBatchModal = closeBatchModal;
+        window.applyBatchInput = applyBatchInput;
+        window.saveInventoryToHistory = saveInventoryToHistory;
+        window.updateQuantity = updateQuantity;
+        window.addItem = addItem;
+        window.removeItem = removeItem;
+        window.updateStandard = updateStandard;
+        window.loadHistoryForDate = loadHistoryForDate;
+        window.exportHistoryToCSV = exportHistoryToCSV;
+        window.setCategoryFilter = setCategoryFilter;
+        window.updateHistoryQuantity = updateHistoryQuantity;
+        window.saveEditedHistory = saveEditedHistory;
+        window.toggleHistoryEditMode = toggleHistoryEditMode;
+
+        // Custom Confirm Modal Helper
+        function showConfirm(title, message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            const content = document.getElementById('confirm-modal-content');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-msg').textContent = message;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            const btnOk = document.getElementById('btn-confirm-ok');
+            const btnCancel = document.getElementById('btn-confirm-cancel');
+            
+            // Cleanup previous listeners
+            const newBtnOk = btnOk.cloneNode(true);
+            const newBtnCancel = btnCancel.cloneNode(true);
+            btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+            btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+            newBtnCancel.onclick = () => {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 200);
+            };
+
+            newBtnOk.onclick = () => {
+                onConfirm();
+                newBtnCancel.click(); // Close modal
+            };
+        }
+
+        // --- Firebase Initialization & Sync ---
+        async function initFirebase() {
+            try {
+                // Rule 3: Auth Before Queries
+                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (token) {
+                    await signInWithCustomToken(auth, token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                if (!auth.currentUser) throw new Error("Authentication failed");
+                
+                isFirebaseReady = true;
+                setupRealtimeSync();
+
+            } catch (error) {
+                console.error("Firebase init error:", error);
+                document.getElementById('loading-overlay').classList.add('hidden');
+                showToast("오프라인 모드로 실행됩니다. (연동 실패)", "error");
+                // Fallback to local defaults if Firebase fails
+                loadDefaultData();
+            }
+        }
+
+        function setupRealtimeSync() {
+            if (!auth.currentUser) return;
+
+            // Rule 1: Strict Paths - Using public/data for shared inventory state
+            const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory_state', 'main');
+            
+            // Listen for changes from any user
+            onSnapshot(stateRef, (docSnap) => {
+                document.getElementById('loading-overlay').classList.add('hidden');
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // Decode stringified arrays to bypass complex merging issues
+                    if (data.inventoryString) {
+                        try {
+                            inventoryData = JSON.parse(data.inventoryString);
+                        } catch(e) { console.error("Parse error inventory"); }
+                    }
+                    if (data.historyString) {
+                        try {
+                            historyLogs = JSON.parse(data.historyString);
+                        } catch(e) { console.error("Parse error history"); }
+                    }
+                    
+                    // Re-render UI
+                    updateUIFromData();
+                    
+                } else {
+                    // First time initialization for all users
+                    loadDefaultData();
+                    saveDataToFirebase(); // Broadcast defaults
+                }
+            }, (error) => {
+                console.error("Realtime sync error:", error);
+                showToast("데이터 동기화 오류 발생", "error");
+            });
+        }
+
+        async function saveDataToFirebase() {
+            if (!isFirebaseReady || !auth.currentUser) return;
+            
+            try {
+                const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory_state', 'main');
+                
+                // Stringify nested arrays to respect Firestore structure recommendations for simple sync
+                await setDoc(stateRef, {
+                    inventoryString: JSON.stringify(inventoryData),
+                    historyString: JSON.stringify(historyLogs),
+                    lastUpdated: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error("Save to Firebase error:", error);
+                showToast("저장 실패", "error");
+            }
+        }
+
+        function loadDefaultData() {
+            // Default setup for a brand new store
+            inventoryData = [
+                { category: "원두", name: "타이틀", standard: 5, current: 3, inbound: 0 },
+                { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 },
+                { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+                { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
+                { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
+                { category: "파우더", name: "농축밀크", standard: 7, current: 3, inbound: 0 },
+                { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 },
+                { category: "파우더", name: "허니자몽", standard: 5, current: 5, inbound: 0 },
+                { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+            ];
+            // Request 1: Cleared past sample data
+            historyLogs = {}; 
+            updateUIFromData();
+        }
+
+        function updateUIFromData() {
+            renderCategoryFilters();
+            renderInventory();
+            renderSettingsList();
+            
+            // Check if we need to update history view if currently active
+            if (!document.getElementById('view-calendar').classList.contains('hidden')) {
+                loadHistoryForDate();
+            }
+        }
+
+
+        function getTodayString() {
+            // Ensure local timezone formatting for 'YYYY-MM-DD'
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // App Initialization triggered on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const todayStr = getTodayString();
+            
+            // Request 2: Show today's date in inventory tab
+            document.getElementById('today-date-display').textContent = `오늘: ${todayStr}`;
+            
+            // Set calendar default
+            document.getElementById('selected-date').value = todayStr;
+            
+            initFirebase();
+        });
+
+        function switchTab(tabName) {
+            const views = ['view-inventory', 'view-calendar', 'view-settings'];
+            const tabs = ['tab-inventory', 'tab-calendar', 'tab-settings'];
+
+            views.forEach((id, index) => {
+                const viewEl = document.getElementById(id);
+                const tabEl = document.getElementById(tabs[index]);
+                
+                if (id === `view-${tabName}`) {
+                    viewEl.classList.remove('hidden');
+                    tabEl.className = "flex-1 py-2.5 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600 text-center transition-colors";
+                } else {
+                    viewEl.classList.add('hidden');
+                    tabEl.className = "flex-1 py-2.5 text-sm font-semibold text-slate-500 border-b-2 border-transparent text-center transition-colors";
+                }
+            });
+
+            if (tabName === 'calendar') loadHistoryForDate();
+        }
+
+        function renderCategoryFilters() {
+            const filterContainer = document.getElementById('category-filters');
+            if (!filterContainer) return;
+
+            const categories = ['전체', ...new Set(inventoryData.map(item => item.category))];
+            
+            filterContainer.innerHTML = '';
+            categories.forEach(cat => {
+                const isActive = cat === currentCategoryFilter;
+                const btn = document.createElement('button');
+                btn.onclick = () => setCategoryFilter(cat);
+                btn.className = `px-3 py-1 text-[11px] font-bold rounded-full whitespace-nowrap transition-colors border ${
+                    isActive 
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`;
+                btn.textContent = cat;
+                filterContainer.appendChild(btn);
+            });
+        }
+
+        function setCategoryFilter(category) {
+            currentCategoryFilter = category;
+            renderCategoryFilters();
+            renderInventory();
+        }
+
+        // Request 4: Improved Consumption Analysis accounting for inbound stock
+        function analyzeConsumption() {
+            const sortedDates = Object.keys(historyLogs).sort();
+            if (sortedDates.length < 2) return null;
+
+            let totalValidDays = 0;
+            let itemConsumption = {};
+
+            inventoryData.forEach(item => itemConsumption[item.name] = 0);
+
+            for (let i = 0; i < sortedDates.length - 1; i++) {
+                const date1 = new Date(sortedDates[i]);
+                const date2 = new Date(sortedDates[i+1]);
+                const log1 = historyLogs[sortedDates[i]]; // Previous Record
+                const log2 = historyLogs[sortedDates[i+1]]; // Next Record
+
+                let days = 0;
+                let currDate = new Date(date1);
+                currDate.setDate(currDate.getDate() + 1);
+                
+                while (currDate <= date2) {
+                    if (currDate.getDay() !== 0) { // Exclude Sundays from averages
+                        days++;
+                    }
+                    currDate.setDate(currDate.getDate() + 1);
+                }
+                if(days === 0) days = 1; // Prevent division by zero if dates are same or only weekend
+                totalValidDays += days;
+
+                log1.forEach(item1 => {
+                    const item2 = log2.find(i => i.name === item1.name);
+                    if (item2) {
+                        // NEW LOGIC: Total Consumed = (Prev Current + Today Inbound) - Today Current
+                        const inbound = item2.inbound || 0; 
+                        const theoreticalStock = item1.current + inbound;
+                        const consumed = theoreticalStock - item2.current;
+                        
+                        if (consumed > 0) {
+                            itemConsumption[item1.name] = (itemConsumption[item1.name] || 0) + consumed;
+                        }
+                    }
+                });
+            }
+
+            let stats = {};
+            inventoryData.forEach(item => {
+                const totalConsumed = itemConsumption[item.name] || 0;
+                const dailyAvg = totalValidDays > 0 ? (totalConsumed / totalValidDays) : 0;
+                stats[item.name] = {
+                    dailyAvg: dailyAvg,
+                    safeStock: dailyAvg * 3
+                };
+            });
+            return { totalValidDays, stats };
+        }
+
+        function renderInventory() {
+            const listContainer = document.getElementById('inventory-list');
+            listContainer.innerHTML = '';
+            
+            const analysis = analyzeConsumption();
+
+            inventoryData.forEach((item, index) => {
+                if (currentCategoryFilter !== '전체' && item.category !== currentCategoryFilter) {
+                    return; 
+                }
+                
+                let dailyAvg = 0;
+                let daysLeft = Infinity;
+                
+                if (analysis && analysis.stats[item.name]) {
+                    dailyAvg = analysis.stats[item.name].dailyAvg;
+                    if (dailyAvg > 0) {
+                        daysLeft = item.current / dailyAvg;
+                    }
+                }
+
+                const leadTimeWarning = (dailyAvg > 0 && daysLeft <= 3);
+
+                let statusHTML = '';
+                if (leadTimeWarning) {
+                    statusHTML = '<span class="text-[9px] bg-red-500 text-white font-semibold px-1.5 py-0.5 rounded animate-pulse shadow-sm">발주 🚨</span>';
+                } else if (item.current < item.standard) {
+                    statusHTML = '<span class="text-[9px] bg-amber-100 text-amber-600 font-semibold px-1.5 py-0.5 rounded">기준 미달</span>';
+                } else {
+                    statusHTML = '<span class="text-[9px] bg-emerald-50 text-emerald-500 font-semibold px-1.5 py-0.5 rounded border border-emerald-100">안정적</span>';
+                }
+                
+                // Show today's inbound if exists
+                const inboundBadge = (item.inbound && item.inbound > 0) 
+                    ? `<span class="text-[8px] bg-indigo-100 text-indigo-700 px-1 py-0.5 rounded-sm font-bold absolute top-2 right-2">오늘 +${item.inbound}입고</span>` 
+                    : '';
+
+                const card = document.createElement('div');
+                card.className = `bg-white p-2.5 rounded-xl shadow-sm border ${leadTimeWarning ? 'border-red-300 bg-red-50/30' : 'border-slate-100'} flex flex-col transition-colors relative overflow-hidden`;
+                
+                card.innerHTML = `
+                    ${leadTimeWarning ? '<div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>' : ''}
+                    ${inboundBadge}
+                    <div class="flex items-center justify-between mb-2 pl-1.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${leadTimeWarning ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}">${item.category}</span>
+                            <h3 class="font-bold text-slate-800 text-sm leading-tight">${item.name}</h3>
+                            ${statusHTML}
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between pl-1.5">
+                        <div class="flex flex-col gap-1 text-[10px] text-slate-500">
+                            <div>
+                                기준: <span class="font-medium text-slate-700">${item.standard}</span> 
+                                <span class="mx-1 text-slate-300">|</span> 
+                                소모: <span class="font-semibold text-indigo-600">${dailyAvg.toFixed(2)}/일</span>
+                            </div>
+                            <div>
+                                ${dailyAvg > 0 ? 
+                                    `<span class="font-bold ${daysLeft <= 3 ? 'text-red-600 bg-red-50' : 'text-emerald-700 bg-emerald-50'} px-1.5 py-0.5 rounded border ${daysLeft <= 3 ? 'border-red-100' : 'border-emerald-100'}">예상재고 ${daysLeft.toFixed(1)}일치</span>` 
+                                    : 
+                                    `<span class="text-slate-400">소모 데이터 부족</span>`}
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+                            <button onclick="updateQuantity(${index}, -1)" class="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition">
+                                <i class="fa-solid fa-minus text-xs"></i>
+                            </button>
+                            <span class="font-bold text-base w-6 text-center text-slate-800">${item.current}</span>
+                            <button onclick="updateQuantity(${index}, 1)" class="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+
+        function updateQuantity(index, delta) {
+            inventoryData[index].current = Math.max(0, inventoryData[index].current + delta);
+            // Don't save to firebase immediately to prevent spam, wait for 'Save' button click
+            renderInventory(); 
+        }
+
+        function openBatchModal() {
+            const modal = document.getElementById('batch-modal');
+            const content = document.getElementById('batch-modal-content');
+            const list = document.getElementById('batch-input-list');
+            
+            list.innerHTML = '';
+            inventoryData.forEach((item, index) => {
+                list.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                        <div>
+                            <span class="text-[10px] text-slate-500 bg-slate-200 px-1 py-0.5 rounded">${item.category}</span>
+                            <span class="font-medium text-sm text-slate-700 ml-1.5">${item.name}</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">현재: ${item.current}개</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-bold text-indigo-500 mr-2">+</span>
+                            <input type="number" id="batch-input-${index}" min="0" value="0" class="w-16 p-1.5 border border-slate-300 rounded-lg text-center text-sm font-bold text-slate-700 bg-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                `;
+            });
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeBatchModal() {
+            const modal = document.getElementById('batch-modal');
+            const content = document.getElementById('batch-modal-content');
+            
+            content.classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        function applyBatchInput() {
+            let hasChanges = false;
+            inventoryData.forEach((item, index) => {
+                const input = document.getElementById(`batch-input-${index}`);
+                const addAmount = parseInt(input.value) || 0;
+                if (addAmount > 0) {
+                    item.current += addAmount;
+                    item.inbound = (item.inbound || 0) + addAmount; // 누적 입고량 기록
+                    hasChanges = true;
+                }
+            });
+
+            if (hasChanges) {
+                saveDataToFirebase();
+                showToast("입고 수량이 반영되었습니다.");
+            }
+            closeBatchModal();
+        }
+
+
+        // Request 2: Save Inventory always targets 'Today'
+        function saveInventoryToHistory() {
+            const today = getTodayString(); 
+            
+            // Deep copy current state to history
+            historyLogs[today] = JSON.parse(JSON.stringify(inventoryData));
+            
+            saveDataToFirebase(); // Broadcast to all
+            
+            showToast(`[${today}] 재고가 클라우드에 저장되었습니다.`);
+            
+            // If calendar is open on today, refresh it
+            if (!document.getElementById('view-calendar').classList.contains('hidden')) {
+                const selectedDate = document.getElementById('selected-date').value;
+                if(selectedDate === today) loadHistoryForDate();
+            }
+        }
+
+
+        // Request 3: Edit Past History Feature
+        function loadHistoryForDate() {
+            const dateVal = document.getElementById('selected-date').value;
+            const dateLabel = document.getElementById('history-date-label');
+            const chartContainer = document.getElementById('chart-container');
+            const editBtn = document.getElementById('btn-toggle-history-edit');
+            const saveBtn = document.getElementById('btn-save-history-edit');
+            
+            dateLabel.textContent = dateVal;
+            editingHistoryDate = dateVal;
+            isHistoryEditMode = false; // Reset to view mode on date change
+
+            const logsForDate = historyLogs[dateVal];
+
+            if (!logsForDate || logsForDate.length === 0) {
+                chartContainer.classList.add('hidden');
+                if (editBtn) editBtn.classList.add('hidden');
+                if (saveBtn) saveBtn.classList.add('hidden');
+                if (inventoryChart) {
+                    inventoryChart.destroy();
+                    inventoryChart = null;
+                }
+                const historyList = document.getElementById('history-list');
+                historyList.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fa-regular fa-folder-open text-slate-300 text-3xl mb-2"></i>
+                        <p class="text-xs text-slate-500">선택한 날짜(${dateVal})의 기록이 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Clone data for editing locally before save
+            editedHistoryData = JSON.parse(JSON.stringify(logsForDate));
+
+            chartContainer.classList.remove('hidden');
+            
+            if (editBtn) {
+                editBtn.classList.remove('hidden');
+                editBtn.classList.add('flex');
+                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
+            }
+            if (saveBtn) {
+                saveBtn.classList.add('hidden');
+                saveBtn.classList.remove('flex');
+            }
+            
+            renderChart(editedHistoryData);
+            renderHistoryList();
+        }
+
+        function toggleHistoryEditMode() {
+            isHistoryEditMode = !isHistoryEditMode;
+            
+            const editBtn = document.getElementById('btn-toggle-history-edit');
+            const saveBtn = document.getElementById('btn-save-history-edit');
+            
+            if (isHistoryEditMode) {
+                editBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> 취소';
+                saveBtn.classList.remove('hidden');
+                saveBtn.classList.add('flex');
+            } else {
+                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
+                saveBtn.classList.add('hidden');
+                saveBtn.classList.remove('flex');
+                
+                // Revert changes if cancelled
+                const dateVal = document.getElementById('selected-date').value;
+                if(historyLogs[dateVal]) {
+                    editedHistoryData = JSON.parse(JSON.stringify(historyLogs[dateVal]));
+                }
+                renderChart(editedHistoryData); // Revert chart too
+            }
+            renderHistoryList();
+        }
+
+        function renderHistoryList() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            editedHistoryData.forEach((item, idx) => {
+                const isLow = item.current < item.standard;
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200 transition-all hover:bg-white";
+                
+                let controlsHtml = '';
+                if (isHistoryEditMode) {
+                    controlsHtml = `
+                        <div class="flex items-center space-x-1">
+                            <button onclick="updateHistoryQuantity(${idx}, -1)" class="w-7 h-7 rounded bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 flex justify-center items-center shadow-sm">
+                                <i class="fa-solid fa-minus text-[10px]"></i>
+                            </button>
+                            <span class="w-7 text-center font-bold text-xs ${isLow ? 'text-red-600' : 'text-slate-800'}" id="hist-qty-${idx}">${item.current}</span>
+                            <button onclick="updateHistoryQuantity(${idx}, 1)" class="w-7 h-7 rounded bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 flex justify-center items-center shadow-sm">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    controlsHtml = `
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-xs px-2 py-1 rounded ${isLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}">${item.current} 개</span>
+                        </div>
+                    `;
+                }
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-2 w-1/2">
+                        <span class="text-[9px] px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded">${item.category}</span>
+                        <span class="font-bold text-xs text-slate-700 truncate">${item.name}</span>
+                    </div>
+                    ${controlsHtml}
+                `;
+                historyList.appendChild(row);
+            });
+        }
+
+        function updateHistoryQuantity(idx, delta) {
+            if(!editedHistoryData[idx]) return;
+            editedHistoryData[idx].current = Math.max(0, editedHistoryData[idx].current + delta);
+            
+            // Update UI instantly
+            const qtySpan = document.getElementById(`hist-qty-${idx}`);
+            if(qtySpan) {
+                qtySpan.textContent = editedHistoryData[idx].current;
+                const isLow = editedHistoryData[idx].current < editedHistoryData[idx].standard;
+                qtySpan.className = `w-7 text-center font-bold text-xs ${isLow ? 'text-red-600' : 'text-slate-800'}`;
+            }
+            
+            // Update chart live
+            renderChart(editedHistoryData);
+        }
+
+        function saveEditedHistory() {
+            if(!editingHistoryDate || !editedHistoryData) return;
+            
+            showConfirm("이력 수정 확인", `${editingHistoryDate} 일자의 재고 기록을 덮어쓰시겠습니까? 모든 사용자에게 반영됩니다.`, () => {
+                historyLogs[editingHistoryDate] = JSON.parse(JSON.stringify(editedHistoryData));
+                saveDataToFirebase();
+                showToast("과거 이력이 수정되었습니다.");
+                
+                // Exit edit mode after saving
+                isHistoryEditMode = false;
+                const editBtn = document.getElementById('btn-toggle-history-edit');
+                const saveBtn = document.getElementById('btn-save-history-edit');
+                if (editBtn) editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
+                if (saveBtn) {
+                    saveBtn.classList.add('hidden');
+                    saveBtn.classList.remove('flex');
+                }
+                renderHistoryList();
+            });
+        }
+
+
+        function exportHistoryToCSV() {
+            const dateVal = document.getElementById('selected-date').value;
+            const dataToExport = historyLogs[dateVal];
+
+            if (!dataToExport || dataToExport.length === 0) {
+                showToast("해당 날짜에 내보낼 데이터가 없습니다.", "error");
+                return;
+            }
+
+            const BOM = "\uFEFF";
+            let csvContent = "카테고리,품목명,기준수량,현재수량,상태,당일입고\n";
+
+            dataToExport.forEach(item => {
+                const status = item.current < item.standard ? "부족" : "정상";
+                const inbound = item.inbound || 0;
+                const row = `"${item.category}","${item.name}",${item.standard},${item.current},"${status}",${inbound}`;
+                csvContent += row + "\n";
+            });
+
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `로봇카페_재고내역_${dateVal}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("CSV 파일이 다운로드되었습니다.");
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('inventory-chart').getContext('2d');
+            
+            const labels = data.map(item => item.name);
+            const currentData = data.map(item => item.current);
+            const standardData = data.map(item => item.standard);
+            
+            const bgColors = data.map(item => item.current < item.standard ? 'rgba(239, 68, 68, 0.85)' : 'rgba(99, 102, 241, 0.85)');
+
+            if (inventoryChart) {
+                inventoryChart.data.labels = labels;
+                inventoryChart.data.datasets[0].data = currentData;
+                inventoryChart.data.datasets[0].backgroundColor = bgColors;
+                inventoryChart.data.datasets[1].data = standardData;
+                inventoryChart.update('none'); // Update without full animation for performance
+            } else {
+                inventoryChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '현재 수량',
+                                data: currentData,
+                                backgroundColor: bgColors,
+                                borderRadius: 4,
+                                barPercentage: 0.7
+                            },
+                            {
+                                label: '기준 수량',
+                                data: standardData,
+                                type: 'line',
+                                borderColor: 'rgba(148, 163, 184, 0.9)', 
+                                borderDash: [4, 4],
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: { duration: 300 },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                ticks: { stepSize: 1, font: { size: 9 } },
+                                grid: { color: '#f1f5f9' }
+                            },
+                            x: { 
+                                ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 },
+                                grid: { display: false }
+                            }
+                        },
+                        plugins: {
+                            legend: { 
+                                display: true, 
+                                position: 'top', 
+                                labels: { boxWidth: 12, font: { size: 10, family: "'Inter', sans-serif" } } 
+                            },
+                            tooltip: {
+                                padding: 10,
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                titleFont: { size: 11, family: "'Inter'" },
+                                bodyFont: { size: 12, family: "'Inter'", weight: 'bold' },
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.raw + '개';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+
+        function renderSettingsList() {
+            const listContainer = document.getElementById('settings-item-list');
+            listContainer.innerHTML = '';
+
+            inventoryData.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 gap-2";
+                row.innerHTML = `
+                    <div class="flex flex-col flex-1 overflow-hidden">
+                        <span class="text-[10px] text-slate-500 font-medium truncate">${item.category}</span>
+                        <span class="text-sm font-bold text-slate-800 truncate">${item.name}</span>
+                    </div>
+                    <div class="flex items-center shrink-0 space-x-2">
+                        <div class="flex items-center bg-white border border-slate-200 rounded-lg px-2 py-1 shadow-sm">
+                            <label for="std-${index}" class="text-[10px] text-slate-500 mr-1.5 cursor-pointer font-medium">기준</label>
+                            <input type="number" id="std-${index}" min="0" value="${item.standard}" onchange="updateStandard(${index}, this.value)" class="w-10 text-sm text-right focus:outline-none focus:text-indigo-600 font-bold text-slate-800 bg-transparent">
+                        </div>
+                        <button onclick="removeItem(${index})" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm" title="삭제">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        function updateStandard(index, newValue) {
+            const parsedValue = parseInt(newValue);
+            if (!isNaN(parsedValue) && parsedValue >= 0) {
+                inventoryData[index].standard = parsedValue;
+                saveDataToFirebase();
+                showToast(`'${inventoryData[index].name}' 기준수량 변경됨`);
+            } else {
+                showToast("올바른 수량을 입력해주세요.", "error");
+                renderSettingsList(); 
+            }
+        }
+
+        function addItem() {
+            const category = document.getElementById('new-category').value.trim();
+            const name = document.getElementById('new-name').value.trim();
+            const standard = parseInt(document.getElementById('new-standard').value);
+
+            if (!category || !name || isNaN(standard)) {
+                showToast("모든 항목을 올바르게 입력해주세요.", "error");
+                return;
+            }
+
+            inventoryData.push({
+                category: category,
+                name: name,
+                standard: standard,
+                current: 0,
+                inbound: 0 // Initialize inbound
+            });
+
+            saveDataToFirebase();
+
+            document.getElementById('new-category').value = '';
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-standard').value = '';
+
+            showToast(`'${name}' 품목이 추가되었습니다.`);
+        }
+
+        function removeItem(index) {
+            const itemName = inventoryData[index].name;
+            showConfirm("품목 삭제", `'${itemName}' 품목을 정말 삭제하시겠습니까? 전체 기기에 반영됩니다.`, () => {
+                inventoryData.splice(index, 1);
+                
+                const remainingCategories = new Set(inventoryData.map(item => item.category));
+                if (currentCategoryFilter !== '전체' && !remainingCategories.has(currentCategoryFilter)) {
+                    currentCategoryFilter = '전체';
+                }
+
+                saveDataToFirebase();
+                showToast("품목이 삭제되었습니다.");
+            });
+        }
+
+        function showToast(message, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const icon = document.getElementById('toast-icon');
+            
+            toastMsg.textContent = message;
+            
+            if (type === "error") {
+                icon.className = "fa-solid fa-triangle-exclamation text-red-400 text-sm";
+                toast.classList.replace('border-slate-700', 'border-red-500/50');
+            } else {
+                icon.className = "fa-solid fa-check-circle text-emerald-400 text-sm";
+                toast.classList.replace('border-red-500/50', 'border-slate-700');
+            }
+
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-[-10px]');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-[-10px]');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
