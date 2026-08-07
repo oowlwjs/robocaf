@@ -210,12 +210,14 @@
         let firebaseConfig;
         
         try {
-            firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-                /* Mock config for local testing if env vars are missing */
-                projectId: "mock-project", 
-                apiKey: "mock-key",
-                authDomain: "mock.firebaseapp.com"
-            };
+            firebaseConfig = {
+  apiKey: "AIzaSyD7Hfi4b4tGV3_5Q5iMg4dsOGX3IUxzaVA",
+  authDomain: "robocaf-inven-2b89d.firebaseapp.com",
+  projectId: "robocaf-inven-2b89d",
+  storageBucket: "robocaf-inven-2b89d.firebasestorage.app",
+  messagingSenderId: "206580148947",
+  appId: "1:206580148947:web:0ab87328c952dbb555c226"
+};
         } catch(e) {
             console.error("Firebase config parsing error", e);
             // Fallback for visual rendering if config fails
