@@ -338,7 +338,7 @@ function setupRealtimeSync() {
                         const displayEl = document.getElementById('last-updated-display');
                         if(displayEl) displayEl.textContent = `최종 수정: ${timeString}`;
                     }
-
+                    let hasValidData = false;
                     if (data.inventoryString) {
                         try {
                             inventoryData = JSON.parse(data.inventoryString);
