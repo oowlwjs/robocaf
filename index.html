@@ -646,17 +646,13 @@ function setupRealtimeSync() {
                     statusHTML = '<span class="text-[9px] bg-emerald-50 text-emerald-500 font-semibold px-1.5 py-0.5 rounded border border-emerald-100">안정적</span>';
                 }
                 
-                // Show today's inbound if exists
-                const inboundBadge = (item.inbound && item.inbound > 0) 
-                    ? `<span class="text-[8px] bg-indigo-100 text-indigo-700 px-1 py-0.5 rounded-sm font-bold absolute top-2 right-2">오늘 +${item.inbound}입고</span>` 
-                    : '';
-
+            
                 const card = document.createElement('div');
                 card.className = `bg-white p-2.5 rounded-xl shadow-sm border ${leadTimeWarning ? 'border-red-300 bg-red-50/30' : 'border-slate-100'} flex flex-col transition-colors relative overflow-hidden`;
                 
                 card.innerHTML = `
                     ${leadTimeWarning ? '<div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>' : ''}
-                    ${inboundBadge}
+
                     <div class="flex items-center justify-between mb-2 pl-1.5">
                         <div class="flex items-center space-x-2">
                             <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${leadTimeWarning ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}">${item.category}</span>
