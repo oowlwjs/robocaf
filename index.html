@@ -68,7 +68,7 @@
                         <i class="fa-regular fa-calendar text-indigo-500"></i>
                         <span id="today-date-display">오늘 날짜</span>
                     </h2>
-                    <p class="text-[10px] text-slate-400 mt-0.5">수량 조절 후 꼭 저장버튼을 누르세요</p>
+                    <p id="last-updated-display" class="text-xs text-slate-500 mt-0.5 font-normal">최종 수정: 기록 없음</p>
                 </div>
                 <div class="flex space-x-1.5">
                     <button onclick="openBatchModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-medium text-xs transition flex items-center gap-1 border border-slate-200">
@@ -324,7 +324,20 @@ function setupRealtimeSync() {
                 
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    let hasValidData = false;
+                    if (data.lastUpdated) {
+                        const dateObj = new Date(data.lastUpdated); 
+                        
+                        const year = dateObj.getFullYear();
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        const hours = String(dateObj.getHours()).padStart(2, '0');
+                        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                        
+                        const timeString = `${year}.${month}.${day} ${hours}:${minutes}`;
+                        
+                        const displayEl = document.getElementById('last-updated-display');
+                        if(displayEl) displayEl.textContent = `최종 수정: ${timeString}`;
+                    }
 
                     if (data.inventoryString) {
                         try {
