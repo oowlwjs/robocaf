@@ -690,13 +690,14 @@
                         </div>
                     `;
                } else {
-                    // 조회 모드: 입고 데이터가 0보다 클 때만 입고 표시를 렌더링하고, 아니면 완전히 숨김
-                    const inboundBadge = (item.inbound && item.inbound > 0) 
-                        ? `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shadow-sm">입고 +${item.inbound}</span>` 
-                        : '';
+                    // ★ 명확한 분기: 입고 데이터(inbound)가 명확히 존재하고 0보다 클 때만 뱃지를 생성합니다. 아예 변수를 비워버려 태그 자체가 남지 않습니다.
+                    let inboundBadge = '';
+                    if (item.inbound !== undefined && item.inbound !== null && Number(item.inbound) > 0) {
+                        inboundBadge = `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shadow-sm mr-1.5">입고 +${item.inbound}</span>`;
+                    }
 
                     controlsHtml = `
-                        <div class="flex flex-col gap-1 items-end">
+                        <div class="flex items-center justify-end">
                             ${inboundBadge}
                             <span class="font-bold text-xs px-2 py-1 rounded ${isLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}">${item.current}개</span>
                         </div>
