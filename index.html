@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로봇카페 재고관리 앱</title>
+    <title>로봇카페 재고관리 앱 (고도화)</title>
     <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -84,7 +84,6 @@
                 <!-- Category buttons will be injected here -->
             </div>
 
-            <!-- Inventory Items Container -->
             <div id="inventory-list" class="space-y-1.5">
                 <!-- Dynamic Items will be injected here -->
             </div>
@@ -102,7 +101,6 @@
                 </button>
             </div>
 
-            <!-- Chart Container -->
             <div id="chart-container" class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 hidden">
                 <h3 class="font-bold text-slate-700 text-xs mb-2"><i class="fa-solid fa-chart-simple text-indigo-500 mr-1.5"></i>재고 수준 그래프</h3>
                 <div class="h-44 w-full relative">
@@ -110,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- History Editor Container -->
             <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="font-bold text-slate-700 text-xs flex items-center">
@@ -133,10 +130,10 @@
             </div>
         </section>
 
-        <!-- Tab 3: Settings (Add/Remove Items) -->
+        <!-- Tab 3: Settings -->
         <section id="view-settings" class="hidden space-y-3">
             <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
-                <h2 class="font-bold text-slate-700 text-xs mb-3"><i class="fa-solid fa-plus text-indigo-500 mr-1.5"></i>새 품목 추가 (전체 공유됨)</h2>
+                <h2 class="font-bold text-slate-700 text-xs mb-3"><i class="fa-solid fa-plus text-indigo-500 mr-1.5"></i>새 품목 추가</h2>
                 <div class="space-y-2">
                     <input type="text" id="new-category" placeholder="카테고리 (예: 원두, 시럽)" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <input type="text" id="new-name" placeholder="품목명 (예: 디카페인)" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -149,9 +146,7 @@
 
             <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100">
                 <h2 class="font-bold text-slate-700 text-xs mb-2"><i class="fa-solid fa-trash text-red-500 mr-1.5"></i>품목 관리</h2>
-                <div id="settings-item-list" class="space-y-1.5">
-                    <!-- Items for deletion will be injected here -->
-                </div>
+                <div id="settings-item-list" class="space-y-1.5"></div>
             </div>
         </section>
 
@@ -168,12 +163,10 @@
             </div>
             
             <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
-                <p class="text-[10px] text-amber-700 leading-tight">입고된 수량을 입력해주세요. 입력한 수량은 당일 '소모량' 계산 시 보정치로 활용되며 현재 수량에 더해집니다.</p>
+                <p class="text-[10px] text-amber-700 leading-tight">기입한 수량은 당일 '소모량' 통계를 위한 입고 데이터로 안전하게 처리되며 현재 수량에 더해집니다.</p>
             </div>
 
-            <div class="overflow-y-auto flex-1 pr-1 space-y-2 mb-3" id="batch-input-list">
-                <!-- Batch inputs injected here -->
-            </div>
+            <div class="overflow-y-auto flex-1 pr-1 space-y-2 mb-3" id="batch-input-list"></div>
 
             <div class="mt-auto flex space-x-2 pt-3 border-t border-slate-100">
                 <button onclick="closeBatchModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium text-xs">취소</button>
@@ -182,19 +175,18 @@
         </div>
     </div>
     
-    <!-- Custom Modal UI for Confirmations (replaces window.confirm) -->
+    <!-- Custom Modals & Toasts -->
     <div id="confirm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] hidden flex-col justify-center items-center p-4">
         <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl scale-95 opacity-0 transition-all duration-200" id="confirm-modal-content">
             <h3 id="confirm-title" class="font-bold text-sm text-slate-800 mb-2">확인</h3>
-            <p id="confirm-msg" class="text-xs text-slate-600 mb-4"></p>
+            <p id="confirm-msg" class="text-xs text-slate-600 mb-4 whitespace-pre-line"></p>
             <div class="flex space-x-2">
                 <button id="btn-confirm-cancel" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition">취소</button>
-                <button id="btn-confirm-ok" class="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium shadow transition">확인</button>
+                <button id="btn-confirm-ok" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium shadow transition">확인</button>
             </div>
         </div>
     </div>
 
-    <!-- Custom Toast Message -->
     <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur text-white px-4 py-2 rounded-xl text-xs shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-[70] flex items-center gap-2 border border-slate-700">
         <i id="toast-icon" class="fa-solid fa-check-circle text-emerald-400 text-sm"></i>
         <span id="toast-msg" class="font-medium">저장되었습니다.</span>
@@ -203,41 +195,41 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration provided by environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'robot-cafe-inventory-app';
         let firebaseConfig;
         
         try {
             firebaseConfig = {
-  apiKey: "AIzaSyD7Hfi4b4tGV3_5Q5iMg4dsOGX3IUxzaVA",
-  authDomain: "robocaf-inven-2b89d.firebaseapp.com",
-  projectId: "robocaf-inven-2b89d",
-  storageBucket: "robocaf-inven-2b89d.firebasestorage.app",
-  messagingSenderId: "206580148947",
-  appId: "1:206580148947:web:0ab87328c952dbb555c226"
-};
-        } catch(e) {
-            console.error("Firebase config parsing error", e);
-            // Fallback for visual rendering if config fails
-        }
+                apiKey: "AIzaSyD7Hfi4b4tGV3_5Q5iMg4dsOGX3IUxzaVA",
+                authDomain: "robocaf-inven-2b89d.firebaseapp.com",
+                projectId: "robocaf-inven-2b89d",
+                storageBucket: "robocaf-inven-2b89d.firebasestorage.app",
+                messagingSenderId: "206580148947",
+                appId: "1:206580148947:web:0ab87328c952dbb555c226"
+            };
+        } catch(e) { console.error("Firebase config parsing error", e); }
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
         // State Variables
-        let inventoryData = []; // [{ category, name, standard, current }]
-        let historyLogs = {};   // { "YYYY-MM-DD": [{ name, category, standard, current, inbound }] }
+        let inventoryData = []; 
+        let historyLogs = {};   
+        let lastInboundResetDate = ""; // 날짜 변경 감지용 (당일 입고 리셋용)
         let currentCategoryFilter = '전체';
         let inventoryChart = null;
         let isFirebaseReady = false;
+        
+        // History Edit States
         let editingHistoryDate = null;
         let editedHistoryData = [];
         let isHistoryEditMode = false;
+        let isTemplateMode = false; // 빈 날짜 직전데이터 연동 모드 판별
+        let templateSourceDate = null;
 
-        // Make functions globally available for HTML inline event handlers
         window.switchTab = switchTab;
         window.openBatchModal = openBatchModal;
         window.closeBatchModal = closeBatchModal;
@@ -251,10 +243,10 @@
         window.exportHistoryToCSV = exportHistoryToCSV;
         window.setCategoryFilter = setCategoryFilter;
         window.updateHistoryQuantity = updateHistoryQuantity;
+        window.updateHistoryInbound = updateHistoryInbound; // 새 기능 연결
         window.saveEditedHistory = saveEditedHistory;
         window.toggleHistoryEditMode = toggleHistoryEditMode;
 
-        // Custom Confirm Modal Helper
         function showConfirm(title, message, onConfirm) {
             const modal = document.getElementById('confirm-modal');
             const content = document.getElementById('confirm-modal-content');
@@ -271,7 +263,6 @@
             const btnOk = document.getElementById('btn-confirm-ok');
             const btnCancel = document.getElementById('btn-confirm-cancel');
             
-            // Cleanup previous listeners
             const newBtnOk = btnOk.cloneNode(true);
             const newBtnCancel = btnCancel.cloneNode(true);
             btnOk.parentNode.replaceChild(newBtnOk, btnOk);
@@ -285,38 +276,29 @@
 
             newBtnOk.onclick = () => {
                 onConfirm();
-                newBtnCancel.click(); // Close modal
+                newBtnCancel.click(); 
             };
         }
 
-        // --- Firebase Initialization & Sync ---
         async function initFirebase() {
             try {
-                // Rule 3: Auth Before Queries
                 const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                if (token) {
-                    await signInWithCustomToken(auth, token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                if (token) await signInWithCustomToken(auth, token);
+                else await signInAnonymously(auth);
 
-                if (!auth.currentUser) throw new Error("Authentication failed");
-                
+                if (!auth.currentUser) throw new Error("Auth failed");
                 isFirebaseReady = true;
                 setupRealtimeSync();
-
             } catch (error) {
                 console.error("Firebase init error:", error);
                 document.getElementById('loading-overlay').classList.add('hidden');
-                showToast("오프라인 모드로 실행됩니다. (연동 실패)", "error");
-                // Fallback to local defaults if Firebase fails
+                showToast("오프라인 모드로 실행됩니다.", "error");
                 loadDefaultData();
             }
         }
 
-function setupRealtimeSync() {
+        function setupRealtimeSync() {
             if (!auth.currentUser) return;
-
             const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory_state', 'main');
             
             onSnapshot(stateRef, (docSnap) => {
@@ -326,226 +308,204 @@ function setupRealtimeSync() {
                     const data = docSnap.data();
                     if (data.lastUpdated) {
                         const dateObj = new Date(data.lastUpdated); 
-                        
-                        const year = dateObj.getFullYear();
-                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-                        const day = String(dateObj.getDate()).padStart(2, '0');
-                        const hours = String(dateObj.getHours()).padStart(2, '0');
-                        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-                        
-                        const timeString = `${year}.${month}.${day} ${hours}:${minutes}`;
-                        
-                        const displayEl = document.getElementById('last-updated-display');
-                        if(displayEl) displayEl.textContent = `최종 수정: ${timeString}`;
+                        const timeString = `${dateObj.getFullYear()}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${String(dateObj.getDate()).padStart(2, '0')} ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+                        document.getElementById('last-updated-display').textContent = `최종 수정: ${timeString}`;
                     }
-                    let hasValidData = false;
-                    if (data.inventoryString) {
-                        try {
-                            inventoryData = JSON.parse(data.inventoryString);
-                            hasValidData = true;
-                        } catch(e) { console.error("Parse error inventory"); }
-                    }
-                    if (data.historyString) {
-                        try {
-                            historyLogs = JSON.parse(data.historyString);
-                            hasValidData = true;
-                        } catch(e) { console.error("Parse error history"); }
-                    }
-
-                    // 만약 데이터가 없거나 파싱에 실패했다면 기본값 로드
-                    if (!hasValidData) {
-                        loadDefaultData();
-                    } else {
-                        updateUIFromData();
+                    if (data.lastInboundResetDate) {
+                        lastInboundResetDate = data.lastInboundResetDate;
                     }
                     
+                    let hasValidData = false;
+                    try {
+                        if (data.inventoryString) inventoryData = JSON.parse(data.inventoryString);
+                        if (data.historyString) historyLogs = JSON.parse(data.historyString);
+                        hasValidData = true;
+                    } catch(e) {}
+
+                    if (!hasValidData) loadDefaultData();
+                    else checkDailyInboundReset(); // 새로운 날짜 진입 시 리셋 로직 발동
+                    
                 } else {
-                    // 서버에 아예 데이터가 없을 때 기본값 로드 및 즉시 저장
                     loadDefaultData();
                     saveDataToFirebase(); 
                 }
             }, (error) => {
-                console.error("Realtime sync error:", error);
-                loadDefaultData(); // 연동 오류 시 로컬 데이터라도 보이게
-                showToast("데이터 동기화 오류 발생 (로컬 모드)", "error");
+                loadDefaultData(); 
+                showToast("데이터 동기화 오류 (로컬 모드)", "error");
             });
+        }
+
+        // 날짜가 변경되었을 때 당일 입고량(inbound)을 0으로 턴업 시키는 스마트 안전장치
+        function checkDailyInboundReset() {
+            const today = getTodayString();
+            if (lastInboundResetDate !== today) {
+                let changed = false;
+                inventoryData.forEach(item => {
+                    if (item.inbound && item.inbound > 0) {
+                        item.inbound = 0;
+                        changed = true;
+                    }
+                });
+                lastInboundResetDate = today; // 리셋일자 갱신
+                if (changed) {
+                    saveDataToFirebase();
+                    showToast("새로운 일자입니다. 당일 입고량이 0으로 초기화되었습니다.");
+                }
+            }
+            updateUIFromData();
         }
 
         async function saveDataToFirebase() {
             if (!isFirebaseReady || !auth.currentUser) return;
-            
             try {
                 const stateRef = doc(db, 'artifacts', appId, 'public', 'data', 'inventory_state', 'main');
-                
-                // Stringify nested arrays to respect Firestore structure recommendations for simple sync
                 await setDoc(stateRef, {
                     inventoryString: JSON.stringify(inventoryData),
                     historyString: JSON.stringify(historyLogs),
-                    lastUpdated: new Date().toISOString()
+                    lastUpdated: new Date().toISOString(),
+                    lastInboundResetDate: lastInboundResetDate
                 });
             } catch (error) {
-                console.error("Save to Firebase error:", error);
                 showToast("저장 실패", "error");
             }
         }
 
-       function loadDefaultData() {
-    // 1. 현재 재고 현황 기본값 (최신일인 8/6 기준 데이터로 세팅)
-    inventoryData = [
-        { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 },
-        { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 },
-        { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-        { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
-        { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
-        { category: "파우더", name: "농축밀크", standard: 7, current: 2, inbound: 0 },
-        { category: "파우더", name: "초코", standard: 5, current: 2, inbound: 0 },
-        { category: "파우더", name: "허니자몽", standard: 5, current: 4, inbound: 0 },
-        { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
-    ];
+        function getTodayString() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
 
-    // 2. 7/31 ~ 8/6 전체 이력 데이터를 기본 장착
-    historyLogs = {
-        "2026-07-31": [
-            { category: "원두", name: "타이틀", standard: 5, current: 8, inbound: 0 },
-            { category: "원두", name: "성수", standard: 5, current: 9, inbound: 0 },
-            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "바닐라", standard: 2, current: 4, inbound: 0 },
-            { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 },
-            { category: "파우더", name: "농축밀크", standard: 7, current: 8, inbound: 0 },
-            { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 },
-            { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 },
-            { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
-        ],
-        "2026-08-01": [
-            { category: "원두", name: "타이틀", standard: 5, current: 7, inbound: 0 },
-            { category: "원두", name: "성수", standard: 5, current: 8, inbound: 0 },
-            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 },
-            { category: "파우더", name: "농축밀크", standard: 7, current: 7, inbound: 0 },
-            { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 },
-            { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 },
-            { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
-        ],
-        "2026-08-03": [
-            { category: "원두", name: "타이틀", standard: 5, current: 6, inbound: 0 },
-            { category: "원두", name: "성수", standard: 5, current: 7, inbound: 0 },
-            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 },
-            { category: "파우더", name: "농축밀크", standard: 7, current: 6, inbound: 0 },
-            { category: "파우더", name: "초코", standard: 5, current: 4, inbound: 0 },
-            { category: "파우더", name: "허니자몽", standard: 5, current: 7, inbound: 0 },
-            { category: "파우더", name: "미숫가루", standard: 5, current: 5, inbound: 0 }
-        ],
-        "2026-08-04": [
-            { category: "원두", name: "타이틀", standard: 5, current: 5, inbound: 0 },
-            { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 },
-            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
-            { category: "파우더", name: "농축밀크", standard: 7, current: 4, inbound: 0 },
-            { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 },
-            { category: "파우더", name: "허니자몽", standard: 5, current: 6, inbound: 0 },
-            { category: "파우더", name: "미숫가루", standard: 5, current: 4, inbound: 0 }
-        ],
-        "2026-08-05": [
-            { category: "원두", name: "타이틀", standard: 5, current: 3, inbound: 0 },
-            { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 },
-            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
-            { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
-            { category: "파우더", name: "농축밀크", standard: 7, current: 3, inbound: 0 },
-            { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 },
-            { category: "파우더", name: "허니자몽", standard: 5, current: 5, inbound: 0 },
-            { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
-        ],
-        "2026-08-06": [
-            { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 },
-            { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 },
-            { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
-            { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
-            { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
-            { category: "파우더", name: "농축밀크", standard: 7, current: 2, inbound: 0 },
-            { category: "파우더", name: "초코", standard: 5, current: 2, inbound: 0 },
-            { category: "파우더", name: "허니자몽", standard: 5, current: 4, inbound: 0 },
-            { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
-        ]
-    };
+        function loadDefaultData() {
+            // 1. 현재 재고 현황 기본값 세팅
+            inventoryData = [
+                { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 },
+                { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 },
+                { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 },
+                { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 },
+                { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 },
+                { category: "파우더", name: "농축밀크", standard: 7, current: 2, inbound: 0 },
+                { category: "파우더", name: "초코", standard: 5, current: 2, inbound: 0 },
+                { category: "파우더", name: "허니자몽", standard: 5, current: 4, inbound: 0 },
+                { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+            ];
 
-    updateUIFromData();
-}
+            // 2. 과거 이력 데이터 기본 세팅 (8월 6일까지의 데이터 유지)
+            historyLogs = {
+                "2026-07-31": [
+                    { category: "원두", name: "타이틀", standard: 5, current: 8, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 9, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 4, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 8, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
+                ],
+                "2026-08-01": [
+                    { category: "원두", name: "타이틀", standard: 5, current: 7, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 8, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 7, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
+                ],
+                "2026-08-03": [
+                    { category: "원두", name: "타이틀", standard: 5, current: 6, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 7, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 6, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 4, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 7, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 5, inbound: 0 }
+                ],
+                "2026-08-04": [
+                    { category: "원두", name: "타이틀", standard: 5, current: 5, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 4, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 6, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 4, inbound: 0 }
+                ],
+                "2026-08-05": [
+                    { category: "원두", name: "타이틀", standard: 5, current: 3, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 5, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 3, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 3, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 5, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+                ],
+                "2026-08-06": [
+                    { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 2, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 3, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 2, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 2, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 4, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
+                ]
+            };
+            
+            lastInboundResetDate = getTodayString();
+            updateUIFromData();
+        }
+
+        // 핵심 업데이트 1 & 2: 8/8 기준일 단절 및 동적 영업일 감지 로직 적용
+        function analyzeConsumption() {
+            const sortedDates = Object.keys(historyLogs).sort();
+            if (sortedDates.length < 2) return null;
+
+            // 로직 1. 오염된 과거 데이터 단절을 위한 기준선 설정
+            const CALC_START_DATE = "2026-08-08"; 
+
+            let itemConsumption = {};
+            inventoryData.forEach(item => itemConsumption[item.name] = 0);
+
+            let totalValidDays = 0;
+            const targetValidDays = 10; 
+
+            for (let i = sortedDates.length - 1; i > 0; i--) {
+                const date2Str = sortedDates[i];
+                const date1Str = sortedDates[i - 1];
+                
+                // 기준일 이전의 과거 데이터는 분석 루프에서 완전히 배제합니다.
+                if (date1Str < CALC_START_DATE) {
+                    break; 
+                }
+
+                const log1 = historyLogs[date1Str];
+                const log2 = historyLogs[date2Str];
+
+                log1.forEach(item1 => {
+                    const item2 = log2.find(i => i.name === item1.name);
+                    if (item2) {
+                        const inbound = item2.inbound || 0; 
+                        const consumed = (item1.current + inbound) - item2.current;
+                        if (consumed > 0) {
+                            itemConsumption[item1.name] = (itemConsumption[item1.name] || 0) + consumed;
+                        }
+                    }
+                });
+
+                // 로직 2. 데이터가 존재하는 날짜의 간격은 요일에 상관없이 무조건 1영업일(휴무일 자동 스킵)로 간주
+                totalValidDays += 1;
+                
+                if (totalValidDays >= targetValidDays) break;
+            }
+
+            let stats = {};
+            inventoryData.forEach(item => {
+                const totalConsumed = itemConsumption[item.name] || 0;
+                const dailyAvg = totalValidDays > 0 ? (totalConsumed / totalValidDays) : 0;
+                stats[item.name] = { dailyAvg: dailyAvg, safeStock: dailyAvg * 3 };
+            });
+            
+            return { totalValidDays, stats };
+        }
 
         function updateUIFromData() {
             renderCategoryFilters();
             renderInventory();
             renderSettingsList();
-            
-            // Check if we need to update history view if currently active
             if (!document.getElementById('view-calendar').classList.contains('hidden')) {
                 loadHistoryForDate();
             }
         }
 
-
-        function getTodayString() {
-            // Ensure local timezone formatting for 'YYYY-MM-DD'
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        // App Initialization triggered on load
         window.addEventListener('DOMContentLoaded', () => {
             const todayStr = getTodayString();
-            
-            // Request 2: Show today's date in inventory tab
             document.getElementById('today-date-display').textContent = `오늘: ${todayStr}`;
-            
-            // Set calendar default
             document.getElementById('selected-date').value = todayStr;
-            
             initFirebase();
         });
 
         function switchTab(tabName) {
             const views = ['view-inventory', 'view-calendar', 'view-settings'];
             const tabs = ['tab-inventory', 'tab-calendar', 'tab-settings'];
-
             views.forEach((id, index) => {
-                const viewEl = document.getElementById(id);
-                const tabEl = document.getElementById(tabs[index]);
-                
-                if (id === `view-${tabName}`) {
-                    viewEl.classList.remove('hidden');
-                    tabEl.className = "flex-1 py-2.5 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600 text-center transition-colors";
-                } else {
-                    viewEl.classList.add('hidden');
-                    tabEl.className = "flex-1 py-2.5 text-sm font-semibold text-slate-500 border-b-2 border-transparent text-center transition-colors";
-                }
+                document.getElementById(id).classList.toggle('hidden', id !== `view-${tabName}`);
+                document.getElementById(tabs[index]).className = id === `view-${tabName}` 
+                    ? "flex-1 py-2.5 text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600 text-center transition-colors" 
+                    : "flex-1 py-2.5 text-sm font-semibold text-slate-500 border-b-2 border-transparent text-center transition-colors";
             });
-
             if (tabName === 'calendar') loadHistoryForDate();
         }
 
-        function renderCategoryFilters() {
+        function renderCategoryFilters() { /* ... 생략 방지, 전체 포함 ... */
             const filterContainer = document.getElementById('category-filters');
             if (!filterContainer) return;
-
             const categories = ['전체', ...new Set(inventoryData.map(item => item.category))];
-            
             filterContainer.innerHTML = '';
             categories.forEach(cat => {
                 const isActive = cat === currentCategoryFilter;
                 const btn = document.createElement('button');
                 btn.onclick = () => setCategoryFilter(cat);
-                btn.className = `px-3 py-1 text-[11px] font-bold rounded-full whitespace-nowrap transition-colors border ${
-                    isActive 
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' 
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                }`;
+                btn.className = `px-3 py-1 text-[11px] font-bold rounded-full whitespace-nowrap transition-colors border ${isActive ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`;
                 btn.textContent = cat;
                 filterContainer.appendChild(btn);
             });
@@ -557,115 +517,30 @@ function setupRealtimeSync() {
             renderInventory();
         }
 
-        // Request 4: Improved Consumption Analysis accounting for inbound stock
-       function analyzeConsumption() {
-    const sortedDates = Object.keys(historyLogs).sort();
-    if (sortedDates.length < 2) return null;
-
-    let itemConsumption = {};
-    inventoryData.forEach(item => itemConsumption[item.name] = 0);
-
-    let totalValidDays = 0;
-    const targetValidDays = 10; // 최근 10일의 영업일 기준
-    
-    // 뒤쪽(최신 날짜)부터 거꾸로 탐색하며 최근 10일의 영업일을 채움
-    let validDaysCount = 0;
-    let usedDates = [];
-
-    for (let i = sortedDates.length - 1; i > 0; i--) {
-        const date2Str = sortedDates[i];
-        const date1Str = sortedDates[i - 1];
-        
-        const date1 = new Date(date1Str);
-        const date2 = new Date(date2Str);
-
-        let currentDaysInInterval = 0;
-        let currDate = new Date(date1);
-        currDate.setDate(currDate.getDate() + 1);
-
-        // 두 날짜 사이의 영업일(일요일 제외) 계산
-        while (currDate <= date2) {
-            if (currDate.getDay() !== 0) { // 일요일(0)이 아니면 영업일로 인정
-                currentDaysInInterval++;
-            }
-            currDate.setDate(currDate.getDate() + 1);
-        }
-
-        if (currentDaysInInterval > 0) {
-            const log1 = historyLogs[date1Str];
-            const log2 = historyLogs[date2Str];
-
-            log1.forEach(item1 => {
-                const item2 = log2.find(i => i.name === item1.name);
-                if (item2) {
-                    const inbound = item2.inbound || 0; 
-                    const consumed = (item1.current + inbound) - item2.current;
-                    if (consumed > 0) {
-                        itemConsumption[item1.name] = (itemConsumption[item1.name] || 0) + consumed;
-                    }
-                }
-            });
-
-            totalValidDays += currentDaysInInterval;
-            validDaysCount++;
-        }
-
-        // 최근 10일치 영업일 분량이 채워지면 중단
-        if (totalValidDays >= targetValidDays) break;
-    }
-
-    let stats = {};
-    inventoryData.forEach(item => {
-        const totalConsumed = itemConsumption[item.name] || 0;
-        // 누적된 유효 영업일이 0보다 크면 그 일수로 나누고, 아니면 0 처리
-        const dailyAvg = totalValidDays > 0 ? (totalConsumed / totalValidDays) : 0;
-        stats[item.name] = {
-            dailyAvg: dailyAvg,
-            safeStock: dailyAvg * 3
-        };
-    });
-    
-    return { totalValidDays, stats };
-}
         function renderInventory() {
             const listContainer = document.getElementById('inventory-list');
             listContainer.innerHTML = '';
-            
             const analysis = analyzeConsumption();
 
             inventoryData.forEach((item, index) => {
-                if (currentCategoryFilter !== '전체' && item.category !== currentCategoryFilter) {
-                    return; 
-                }
+                if (currentCategoryFilter !== '전체' && item.category !== currentCategoryFilter) return; 
                 
                 let dailyAvg = 0;
                 let daysLeft = Infinity;
-                
                 if (analysis && analysis.stats[item.name]) {
                     dailyAvg = analysis.stats[item.name].dailyAvg;
-                    if (dailyAvg > 0) {
-                        daysLeft = item.current / dailyAvg;
-                    }
+                    if (dailyAvg > 0) daysLeft = item.current / dailyAvg;
                 }
 
                 const leadTimeWarning = (dailyAvg > 0 && daysLeft <= 3);
-
-                let statusHTML = '';
-                if (leadTimeWarning) {
-                    statusHTML = '<span class="text-[9px] bg-red-500 text-white font-semibold px-1.5 py-0.5 rounded animate-pulse shadow-sm">발주 🚨</span>';
-                } else if (item.current < item.standard) {
-                    statusHTML = '<span class="text-[9px] bg-amber-100 text-amber-600 font-semibold px-1.5 py-0.5 rounded">기준 미달</span>';
-                } else {
-                    statusHTML = '<span class="text-[9px] bg-emerald-50 text-emerald-500 font-semibold px-1.5 py-0.5 rounded border border-emerald-100">안정적</span>';
-                }
+                let statusHTML = leadTimeWarning ? '<span class="text-[9px] bg-red-500 text-white font-semibold px-1.5 py-0.5 rounded animate-pulse shadow-sm">발주 🚨</span>' : 
+                                 item.current < item.standard ? '<span class="text-[9px] bg-amber-100 text-amber-600 font-semibold px-1.5 py-0.5 rounded">기준 미달</span>' : 
+                                 '<span class="text-[9px] bg-emerald-50 text-emerald-500 font-semibold px-1.5 py-0.5 rounded border border-emerald-100">안정적</span>';
                 
-            
                 const card = document.createElement('div');
                 card.className = `bg-white p-2.5 rounded-xl shadow-sm border ${leadTimeWarning ? 'border-red-300 bg-red-50/30' : 'border-slate-100'} flex flex-col transition-colors relative overflow-hidden`;
-                
                 card.innerHTML = `
                     ${leadTimeWarning ? '<div class="absolute top-0 left-0 w-1.5 h-full bg-red-500"></div>' : ''}
-
                     <div class="flex items-center justify-between mb-2 pl-1.5">
                         <div class="flex items-center space-x-2">
                             <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${leadTimeWarning ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}">${item.category}</span>
@@ -673,30 +548,15 @@ function setupRealtimeSync() {
                             ${statusHTML}
                         </div>
                     </div>
-                    
                     <div class="flex items-center justify-between pl-1.5">
                         <div class="flex flex-col gap-1 text-[10px] text-slate-500">
-                            <div>
-                                기준: <span class="font-medium text-slate-700">${item.standard}</span> 
-                                <span class="mx-1 text-slate-300">|</span> 
-                                소모: <span class="font-semibold text-indigo-600">${dailyAvg.toFixed(2)}/일</span>
-                            </div>
-                            <div>
-                                ${dailyAvg > 0 ? 
-                                    `<span class="font-bold ${daysLeft <= 3 ? 'text-red-600 bg-red-50' : 'text-emerald-700 bg-emerald-50'} px-1.5 py-0.5 rounded border ${daysLeft <= 3 ? 'border-red-100' : 'border-emerald-100'}">예상재고 ${daysLeft.toFixed(1)}일치</span>` 
-                                    : 
-                                    `<span class="text-slate-400">소모 데이터 부족</span>`}
-                            </div>
+                            <div>기준: <span class="font-medium text-slate-700">${item.standard}</span> <span class="mx-1 text-slate-300">|</span> 소모: <span class="font-semibold text-indigo-600">${dailyAvg.toFixed(2)}/일</span></div>
+                            <div>${dailyAvg > 0 ? `<span class="font-bold ${daysLeft <= 3 ? 'text-red-600 bg-red-50' : 'text-emerald-700 bg-emerald-50'} px-1.5 py-0.5 rounded border ${daysLeft <= 3 ? 'border-red-100' : 'border-emerald-100'}">예상재고 ${daysLeft.toFixed(1)}일치</span>` : `<span class="text-slate-400">소모 데이터 부족</span>`}</div>
                         </div>
-
                         <div class="flex items-center space-x-2 bg-slate-50 p-1.5 rounded-lg border border-slate-200">
-                            <button onclick="updateQuantity(${index}, -1)" class="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition">
-                                <i class="fa-solid fa-minus text-xs"></i>
-                            </button>
+                            <button onclick="updateQuantity(${index}, -1)" class="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition"><i class="fa-solid fa-minus text-xs"></i></button>
                             <span class="font-bold text-base w-6 text-center text-slate-800">${item.current}</span>
-                            <button onclick="updateQuantity(${index}, 1)" class="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                            </button>
+                            <button onclick="updateQuantity(${index}, 1)" class="w-7 h-7 rounded bg-white border border-slate-300 shadow-sm flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition"><i class="fa-solid fa-plus text-xs"></i></button>
                         </div>
                     </div>
                 `;
@@ -704,94 +564,12 @@ function setupRealtimeSync() {
             });
         }
 
-
         function updateQuantity(index, delta) {
             inventoryData[index].current = Math.max(0, inventoryData[index].current + delta);
-            // Don't save to firebase immediately to prevent spam, wait for 'Save' button click
             renderInventory(); 
         }
 
-        function openBatchModal() {
-            const modal = document.getElementById('batch-modal');
-            const content = document.getElementById('batch-modal-content');
-            const list = document.getElementById('batch-input-list');
-            
-            list.innerHTML = '';
-            inventoryData.forEach((item, index) => {
-                list.innerHTML += `
-                    <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                        <div>
-                            <span class="text-[10px] text-slate-500 bg-slate-200 px-1 py-0.5 rounded">${item.category}</span>
-                            <span class="font-medium text-sm text-slate-700 ml-1.5">${item.name}</span>
-                            <p class="text-[10px] text-slate-400 mt-0.5">현재: ${item.current}개</p>
-                        </div>
-                        <div class="flex items-center">
-                            <span class="text-sm font-bold text-indigo-500 mr-2">+</span>
-                            <input type="number" id="batch-input-${index}" min="0" value="0" class="w-16 p-1.5 border border-slate-300 rounded-lg text-center text-sm font-bold text-slate-700 bg-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
-                        </div>
-                    </div>
-                `;
-            });
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                content.classList.remove('translate-y-full');
-            }, 10);
-        }
-
-        function closeBatchModal() {
-            const modal = document.getElementById('batch-modal');
-            const content = document.getElementById('batch-modal-content');
-            
-            content.classList.add('translate-y-full');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            }, 300);
-        }
-
-       function applyBatchInput() {
-    let hasChanges = false;
-    inventoryData.forEach((item, index) => {
-        const input = document.getElementById(`batch-input-${index}`);
-        const addAmount = parseInt(input.value) || 0;
-        if (addAmount > 0) {
-            item.current += addAmount;
-            item.inbound = (item.inbound || 0) + addAmount; // 누적 입고량 기록
-            hasChanges = true;
-        }
-    });
-
-    if (hasChanges) {
-        saveDataToFirebase();
-        renderInventory(); // ✨ 일괄 입고 후 재고 현황 화면을 즉시 새로고침
-        showToast("입고 수량이 반영되었습니다.");
-    }
-    closeBatchModal();
-}
-
-
-        // Request 2: Save Inventory always targets 'Today'
-        function saveInventoryToHistory() {
-            const today = getTodayString(); 
-            
-            // Deep copy current state to history
-            historyLogs[today] = JSON.parse(JSON.stringify(inventoryData));
-            
-            saveDataToFirebase(); // Broadcast to all
-            
-            showToast(`[${today}] 재고가 클라우드에 저장되었습니다.`);
-            
-            // If calendar is open on today, refresh it
-            if (!document.getElementById('view-calendar').classList.contains('hidden')) {
-                const selectedDate = document.getElementById('selected-date').value;
-                if(selectedDate === today) loadHistoryForDate();
-            }
-        }
-
-
-        // Request 3: Edit Past History Feature
+        // 핵심 업데이트 3 & 4: 스마트 템플릿 도입 및 입고량 UI 분리
         function loadHistoryForDate() {
             const dateVal = document.getElementById('selected-date').value;
             const dateLabel = document.getElementById('history-date-label');
@@ -801,31 +579,53 @@ function setupRealtimeSync() {
             
             dateLabel.textContent = dateVal;
             editingHistoryDate = dateVal;
-            isHistoryEditMode = false; // Reset to view mode on date change
+            isHistoryEditMode = false; 
+            isTemplateMode = false;
 
             const logsForDate = historyLogs[dateVal];
 
             if (!logsForDate || logsForDate.length === 0) {
-                chartContainer.classList.add('hidden');
-                if (editBtn) editBtn.classList.add('hidden');
-                if (saveBtn) saveBtn.classList.add('hidden');
-                if (inventoryChart) {
-                    inventoryChart.destroy();
-                    inventoryChart = null;
+                // 데이터가 없는 날짜 선택 시: 과거 직전 데이터 탐색 로직 (스마트 템플릿)
+                const sortedDates = Object.keys(historyLogs).sort();
+                let closestPastDate = null;
+                for (let i = sortedDates.length - 1; i >= 0; i--) {
+                    if (sortedDates[i] < dateVal) {
+                        closestPastDate = sortedDates[i];
+                        break;
+                    }
                 }
-                const historyList = document.getElementById('history-list');
-                historyList.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fa-regular fa-folder-open text-slate-300 text-3xl mb-2"></i>
-                        <p class="text-xs text-slate-500">선택한 날짜(${dateVal})의 기록이 없습니다.</p>
-                    </div>
-                `;
+
+                if (closestPastDate) {
+                    editedHistoryData = JSON.parse(JSON.stringify(historyLogs[closestPastDate]));
+                    // 통계 오염 방지를 위해 직전 데이터의 '입고량'은 반드시 0으로 초기화
+                    editedHistoryData.forEach(item => item.inbound = 0);
+                    templateSourceDate = closestPastDate;
+                } else {
+                    editedHistoryData = JSON.parse(JSON.stringify(inventoryData));
+                    editedHistoryData.forEach(item => { item.current = 0; item.inbound = 0; });
+                    templateSourceDate = '기본값';
+                }
+
+                chartContainer.classList.add('hidden');
+                isHistoryEditMode = true; // 강제 편집 모드 진입
+                isTemplateMode = true;
+
+                if (editBtn) {
+                    editBtn.classList.remove('hidden');
+                    editBtn.classList.add('flex');
+                    editBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> 취소';
+                }
+                if (saveBtn) {
+                    saveBtn.classList.remove('hidden');
+                    saveBtn.classList.add('flex');
+                }
+                
+                renderHistoryList();
                 return;
             }
 
-            // Clone data for editing locally before save
+            // 일반적인 정상 조회 모드
             editedHistoryData = JSON.parse(JSON.stringify(logsForDate));
-
             chartContainer.classList.remove('hidden');
             
             if (editBtn) {
@@ -842,65 +642,66 @@ function setupRealtimeSync() {
             renderHistoryList();
         }
 
-        function toggleHistoryEditMode() {
-            isHistoryEditMode = !isHistoryEditMode;
-            
-            const editBtn = document.getElementById('btn-toggle-history-edit');
-            const saveBtn = document.getElementById('btn-save-history-edit');
-            
-            if (isHistoryEditMode) {
-                editBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> 취소';
-                saveBtn.classList.remove('hidden');
-                saveBtn.classList.add('flex');
-            } else {
-                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
-                saveBtn.classList.add('hidden');
-                saveBtn.classList.remove('flex');
-                
-                // Revert changes if cancelled
-                const dateVal = document.getElementById('selected-date').value;
-                if(historyLogs[dateVal]) {
-                    editedHistoryData = JSON.parse(JSON.stringify(historyLogs[dateVal]));
-                }
-                renderChart(editedHistoryData); // Revert chart too
-            }
-            renderHistoryList();
-        }
-
         function renderHistoryList() {
             const historyList = document.getElementById('history-list');
             historyList.innerHTML = '';
             
+            // 템플릿 모드일 경우 안내 배너 노출
+            if (isTemplateMode) {
+                historyList.innerHTML = `
+                    <div class="bg-indigo-50 border border-indigo-200 p-2.5 rounded-lg mb-3 animate-pulse shadow-sm">
+                        <p class="text-[10.5px] text-indigo-700 font-medium leading-tight">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>
+                            데이터가 없어 <b>직전 영업일(${templateSourceDate})</b> 재고를 불러왔습니다.<br>
+                            <span class="text-indigo-500 mt-0.5 inline-block">변동된 [입고량]과 최종 [현재고]를 직접 입력해 주세요.</span>
+                        </p>
+                    </div>
+                `;
+            }
+
             editedHistoryData.forEach((item, idx) => {
                 const isLow = item.current < item.standard;
                 const row = document.createElement('div');
-                row.className = "flex items-center justify-between p-2 bg-slate-50 rounded-lg border border-slate-200 transition-all hover:bg-white";
+                row.className = "flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-200 transition-all hover:bg-white mb-1.5";
                 
                 let controlsHtml = '';
                 if (isHistoryEditMode) {
+                    // 편집 모드: 입고량(inbound)과 현재고(current) 입력을 명확한 UI로 분리
                     controlsHtml = `
-                        <div class="flex items-center space-x-1">
-                            <button onclick="updateHistoryQuantity(${idx}, -1)" class="w-7 h-7 rounded bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 flex justify-center items-center shadow-sm">
-                                <i class="fa-solid fa-minus text-[10px]"></i>
-                            </button>
-                            <span class="w-7 text-center font-bold text-xs ${isLow ? 'text-red-600' : 'text-slate-800'}" id="hist-qty-${idx}">${item.current}</span>
-                            <button onclick="updateHistoryQuantity(${idx}, 1)" class="w-7 h-7 rounded bg-white border border-slate-300 text-slate-600 hover:bg-slate-100 flex justify-center items-center shadow-sm">
-                                <i class="fa-solid fa-plus text-[10px]"></i>
-                            </button>
+                        <div class="flex flex-col gap-1.5 items-end w-32 shrink-0">
+                            <!-- 입고량 조절기 (구분을 위해 노란색 톤 사용) -->
+                            <div class="flex items-center gap-1.5 bg-amber-50 px-1.5 py-1 rounded-md border border-amber-200 w-full justify-between shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+                                <span class="text-[9px] text-amber-700 font-bold ml-1">입고</span>
+                                <div class="flex items-center">
+                                    <button onclick="updateHistoryInbound(${idx}, -1)" class="w-5 h-5 bg-white border border-amber-300 rounded text-amber-700 flex items-center justify-center shadow-sm active:scale-95"><i class="fa-solid fa-minus text-[8px]"></i></button>
+                                    <span class="w-6 text-center font-bold text-xs text-amber-800" id="hist-inb-${idx}">${item.inbound || 0}</span>
+                                    <button onclick="updateHistoryInbound(${idx}, 1)" class="w-5 h-5 bg-white border border-amber-300 rounded text-amber-700 flex items-center justify-center shadow-sm active:scale-95"><i class="fa-solid fa-plus text-[8px]"></i></button>
+                                </div>
+                            </div>
+                            <!-- 현재고 조절기 -->
+                            <div class="flex items-center gap-1.5 bg-white px-1.5 py-1 rounded-md border border-slate-300 w-full justify-between shadow-sm">
+                                <span class="text-[9px] text-slate-500 font-bold ml-1">재고</span>
+                                <div class="flex items-center">
+                                    <button onclick="updateHistoryQuantity(${idx}, -1)" class="w-5 h-5 bg-slate-100 border border-slate-300 rounded text-slate-600 flex items-center justify-center shadow-sm active:scale-95"><i class="fa-solid fa-minus text-[8px]"></i></button>
+                                    <span class="w-6 text-center font-bold text-xs ${isLow ? 'text-red-600' : 'text-slate-800'}" id="hist-qty-${idx}">${item.current}</span>
+                                    <button onclick="updateHistoryQuantity(${idx}, 1)" class="w-5 h-5 bg-slate-100 border border-slate-300 rounded text-slate-600 flex items-center justify-center shadow-sm active:scale-95"><i class="fa-solid fa-plus text-[8px]"></i></button>
+                                </div>
+                            </div>
                         </div>
                     `;
                 } else {
                     controlsHtml = `
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-xs px-2 py-1 rounded ${isLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}">${item.current} 개</span>
+                        <div class="flex flex-col gap-1 items-end">
+                            ${item.inbound > 0 ? `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shadow-sm">입고 +${item.inbound}</span>` : ''}
+                            <span class="font-bold text-xs px-2 py-1 rounded ${isLow ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-700'}">${item.current}개</span>
                         </div>
                     `;
                 }
 
                 row.innerHTML = `
-                    <div class="flex items-center gap-2 w-1/2">
-                        <span class="text-[9px] px-1.5 py-0.5 bg-slate-200 text-slate-500 rounded">${item.category}</span>
-                        <span class="font-bold text-xs text-slate-700 truncate">${item.name}</span>
+                    <div class="flex flex-col flex-1 pr-2 overflow-hidden">
+                        <span class="text-[9px] text-slate-500 font-medium mb-0.5">${item.category}</span>
+                        <span class="font-bold text-sm text-slate-800 truncate leading-tight">${item.name}</span>
                     </div>
                     ${controlsHtml}
                 `;
@@ -912,28 +713,43 @@ function setupRealtimeSync() {
             if(!editedHistoryData[idx]) return;
             editedHistoryData[idx].current = Math.max(0, editedHistoryData[idx].current + delta);
             
-            // Update UI instantly
             const qtySpan = document.getElementById(`hist-qty-${idx}`);
             if(qtySpan) {
                 qtySpan.textContent = editedHistoryData[idx].current;
                 const isLow = editedHistoryData[idx].current < editedHistoryData[idx].standard;
-                qtySpan.className = `w-7 text-center font-bold text-xs ${isLow ? 'text-red-600' : 'text-slate-800'}`;
+                qtySpan.className = `w-6 text-center font-bold text-xs ${isLow ? 'text-red-600' : 'text-slate-800'}`;
             }
+            if(!isTemplateMode) renderChart(editedHistoryData);
+        }
+
+        function updateHistoryInbound(idx, delta) {
+            if(!editedHistoryData[idx]) return;
+            editedHistoryData[idx].inbound = Math.max(0, (editedHistoryData[idx].inbound || 0) + delta);
             
-            // Update chart live
-            renderChart(editedHistoryData);
+            const inbSpan = document.getElementById(`hist-inb-${idx}`);
+            if(inbSpan) {
+                inbSpan.textContent = editedHistoryData[idx].inbound;
+            }
         }
 
         function saveEditedHistory() {
             if(!editingHistoryDate || !editedHistoryData) return;
             
-            showConfirm("이력 수정 확인", `${editingHistoryDate} 일자의 재고 기록을 덮어쓰시겠습니까? 모든 사용자에게 반영됩니다.`, () => {
+            // 검증 로직: 현재고가 0으로 남겨진 품목이 있는지 크로스체크
+            const zeroItems = editedHistoryData.filter(item => item.current === 0);
+            let confirmMsg = `${editingHistoryDate} 일자의 재고 기록을 저장하시겠습니까? (전체 동기화)`;
+            
+            if (zeroItems.length > 0) {
+                confirmMsg = `⚠️ 현재고가 '0'으로 설정된 품목이 ${zeroItems.length}개 있습니다. 누락이나 오타가 없는지 확인하셨나요?\n\n이대로 강제 저장하시겠습니까?`;
+            }
+            
+            showConfirm("이력 저장 확인", confirmMsg, () => {
                 historyLogs[editingHistoryDate] = JSON.parse(JSON.stringify(editedHistoryData));
                 saveDataToFirebase();
-                showToast("과거 이력이 수정되었습니다.");
+                showToast("이력이 성공적으로 저장되었습니다.");
                 
-                // Exit edit mode after saving
                 isHistoryEditMode = false;
+                isTemplateMode = false;
                 const editBtn = document.getElementById('btn-toggle-history-edit');
                 const saveBtn = document.getElementById('btn-save-history-edit');
                 if (editBtn) editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
@@ -941,51 +757,110 @@ function setupRealtimeSync() {
                     saveBtn.classList.add('hidden');
                     saveBtn.classList.remove('flex');
                 }
+                
+                document.getElementById('chart-container').classList.remove('hidden');
+                renderChart(editedHistoryData);
                 renderHistoryList();
             });
         }
 
-
-        function exportHistoryToCSV() {
-            const dateVal = document.getElementById('selected-date').value;
-            const dataToExport = historyLogs[dateVal];
-
-            if (!dataToExport || dataToExport.length === 0) {
-                showToast("해당 날짜에 내보낼 데이터가 없습니다.", "error");
-                return;
+        function toggleHistoryEditMode() {
+            isHistoryEditMode = !isHistoryEditMode;
+            
+            const editBtn = document.getElementById('btn-toggle-history-edit');
+            const saveBtn = document.getElementById('btn-save-history-edit');
+            
+            if (isHistoryEditMode) {
+                editBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> 취소';
+                saveBtn.classList.remove('hidden');
+                saveBtn.classList.add('flex');
+            } else {
+                if (isTemplateMode) {
+                    loadHistoryForDate(); // 템플릿 취소 시 비어있는 초기화면으로 롤백
+                    return;
+                }
+                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
+                saveBtn.classList.add('hidden');
+                saveBtn.classList.remove('flex');
+                
+                const dateVal = document.getElementById('selected-date').value;
+                if(historyLogs[dateVal]) {
+                    editedHistoryData = JSON.parse(JSON.stringify(historyLogs[dateVal]));
+                }
+                renderChart(editedHistoryData); 
             }
+            renderHistoryList();
+        }
 
-            const BOM = "\uFEFF";
-            let csvContent = "카테고리,품목명,기준수량,현재수량,상태,당일입고\n";
-
-            dataToExport.forEach(item => {
-                const status = item.current < item.standard ? "부족" : "정상";
-                const inbound = item.inbound || 0;
-                const row = `"${item.category}","${item.name}",${item.standard},${item.current},"${status}",${inbound}`;
-                csvContent += row + "\n";
+        // --- 기타 공통 UI 유틸 함수 --- //
+        function openBatchModal() {
+            const modal = document.getElementById('batch-modal');
+            const content = document.getElementById('batch-modal-content');
+            const list = document.getElementById('batch-input-list');
+            list.innerHTML = '';
+            inventoryData.forEach((item, index) => {
+                list.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                        <div>
+                            <span class="text-[10px] text-slate-500 bg-slate-200 px-1 py-0.5 rounded">${item.category}</span>
+                            <span class="font-medium text-sm text-slate-700 ml-1.5">${item.name}</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">현재: ${item.current}개</p>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="text-sm font-bold text-indigo-500 mr-2">+</span>
+                            <input type="number" id="batch-input-${index}" min="0" value="0" class="w-16 p-1.5 border border-slate-300 rounded-lg text-center text-sm font-bold text-slate-700 bg-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                `;
             });
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => { content.classList.remove('translate-y-full'); }, 10);
+        }
 
-            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            const url = URL.createObjectURL(blob);
+        function closeBatchModal() {
+            const modal = document.getElementById('batch-modal');
+            const content = document.getElementById('batch-modal-content');
+            content.classList.add('translate-y-full');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+        }
+
+        function applyBatchInput() {
+            let hasChanges = false;
+            inventoryData.forEach((item, index) => {
+                const input = document.getElementById(`batch-input-${index}`);
+                const addAmount = parseInt(input.value) || 0;
+                if (addAmount > 0) {
+                    item.current += addAmount;
+                    item.inbound = (item.inbound || 0) + addAmount; 
+                    hasChanges = true;
+                }
+            });
+            if (hasChanges) {
+                saveDataToFirebase();
+                renderInventory();
+                showToast("입고 수량이 반영되었습니다.");
+            }
+            closeBatchModal();
+        }
+
+        function saveInventoryToHistory() {
+            const today = getTodayString(); 
+            historyLogs[today] = JSON.parse(JSON.stringify(inventoryData));
+            saveDataToFirebase(); 
+            showToast(`[${today}] 재고가 성공적으로 마감/저장되었습니다.`);
             
-            link.setAttribute("href", url);
-            link.setAttribute("download", `로봇카페_재고내역_${dateVal}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            showToast("CSV 파일이 다운로드되었습니다.");
+            if (!document.getElementById('view-calendar').classList.contains('hidden')) {
+                const selectedDate = document.getElementById('selected-date').value;
+                if(selectedDate === today) loadHistoryForDate();
+            }
         }
 
         function renderChart(data) {
             const ctx = document.getElementById('inventory-chart').getContext('2d');
-            
             const labels = data.map(item => item.name);
             const currentData = data.map(item => item.current);
             const standardData = data.map(item => item.standard);
-            
             const bgColors = data.map(item => item.current < item.standard ? 'rgba(239, 68, 68, 0.85)' : 'rgba(99, 102, 241, 0.85)');
 
             if (inventoryChart) {
@@ -993,75 +868,29 @@ function setupRealtimeSync() {
                 inventoryChart.data.datasets[0].data = currentData;
                 inventoryChart.data.datasets[0].backgroundColor = bgColors;
                 inventoryChart.data.datasets[1].data = standardData;
-                inventoryChart.update('none'); // Update without full animation for performance
+                inventoryChart.update('none'); 
             } else {
                 inventoryChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: labels,
                         datasets: [
-                            {
-                                label: '현재 수량',
-                                data: currentData,
-                                backgroundColor: bgColors,
-                                borderRadius: 4,
-                                barPercentage: 0.7
-                            },
-                            {
-                                label: '기준 수량',
-                                data: standardData,
-                                type: 'line',
-                                borderColor: 'rgba(148, 163, 184, 0.9)', 
-                                borderDash: [4, 4],
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                fill: false
-                            }
+                            { label: '현재 수량', data: currentData, backgroundColor: bgColors, borderRadius: 4, barPercentage: 0.7 },
+                            { label: '기준 수량', data: standardData, type: 'line', borderColor: 'rgba(148, 163, 184, 0.9)', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, fill: false }
                         ]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: { duration: 300 },
-                        scales: {
-                            y: { 
-                                beginAtZero: true, 
-                                ticks: { stepSize: 1, font: { size: 9 } },
-                                grid: { color: '#f1f5f9' }
-                            },
-                            x: { 
-                                ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 },
-                                grid: { display: false }
-                            }
-                        },
-                        plugins: {
-                            legend: { 
-                                display: true, 
-                                position: 'top', 
-                                labels: { boxWidth: 12, font: { size: 10, family: "'Inter', sans-serif" } } 
-                            },
-                            tooltip: {
-                                padding: 10,
-                                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                titleFont: { size: 11, family: "'Inter'" },
-                                bodyFont: { size: 12, family: "'Inter'", weight: 'bold' },
-                                callbacks: {
-                                    label: function(context) {
-                                        return context.dataset.label + ': ' + context.raw + '개';
-                                    }
-                                }
-                            }
-                        }
+                        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 9 } }, grid: { color: '#f1f5f9' } }, x: { ticks: { font: { size: 9 }, maxRotation: 45, minRotation: 45 }, grid: { display: false } } },
+                        plugins: { legend: { display: true, position: 'top', labels: { boxWidth: 12, font: { size: 10, family: "'Inter', sans-serif" } } }, tooltip: { padding: 10, backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { size: 11, family: "'Inter'" }, bodyFont: { size: 12, family: "'Inter'", weight: 'bold' } } }
                     }
                 });
             }
         }
 
-
         function renderSettingsList() {
             const listContainer = document.getElementById('settings-item-list');
             listContainer.innerHTML = '';
-
             inventoryData.forEach((item, index) => {
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 gap-2";
@@ -1075,9 +904,7 @@ function setupRealtimeSync() {
                             <label for="std-${index}" class="text-[10px] text-slate-500 mr-1.5 cursor-pointer font-medium">기준</label>
                             <input type="number" id="std-${index}" min="0" value="${item.standard}" onchange="updateStandard(${index}, this.value)" class="w-10 text-sm text-right focus:outline-none focus:text-indigo-600 font-bold text-slate-800 bg-transparent">
                         </div>
-                        <button onclick="removeItem(${index})" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm" title="삭제">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
+                        <button onclick="removeItem(${index})" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center transition shadow-sm"><i class="fa-solid fa-trash-can text-sm"></i></button>
                     </div>
                 `;
                 listContainer.appendChild(row);
@@ -1100,50 +927,45 @@ function setupRealtimeSync() {
             const category = document.getElementById('new-category').value.trim();
             const name = document.getElementById('new-name').value.trim();
             const standard = parseInt(document.getElementById('new-standard').value);
-
-            if (!category || !name || isNaN(standard)) {
-                showToast("모든 항목을 올바르게 입력해주세요.", "error");
-                return;
-            }
-
-            inventoryData.push({
-                category: category,
-                name: name,
-                standard: standard,
-                current: 0,
-                inbound: 0 // Initialize inbound
-            });
-
+            if (!category || !name || isNaN(standard)) { showToast("항목을 올바르게 입력해주세요.", "error"); return; }
+            
+            inventoryData.push({ category: category, name: name, standard: standard, current: 0, inbound: 0 });
             saveDataToFirebase();
-
-            document.getElementById('new-category').value = '';
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-standard').value = '';
-
-            showToast(`'${name}' 품목이 추가되었습니다.`);
+            document.getElementById('new-category').value = ''; document.getElementById('new-name').value = ''; document.getElementById('new-standard').value = '';
+            showToast(`'${name}' 추가됨`);
         }
 
         function removeItem(index) {
-            const itemName = inventoryData[index].name;
-            showConfirm("품목 삭제", `'${itemName}' 품목을 정말 삭제하시겠습니까? 전체 기기에 반영됩니다.`, () => {
+            showConfirm("품목 삭제", `'${inventoryData[index].name}'을(를) 삭제하시겠습니까?`, () => {
                 inventoryData.splice(index, 1);
-                
                 const remainingCategories = new Set(inventoryData.map(item => item.category));
-                if (currentCategoryFilter !== '전체' && !remainingCategories.has(currentCategoryFilter)) {
-                    currentCategoryFilter = '전체';
-                }
-
+                if (currentCategoryFilter !== '전체' && !remainingCategories.has(currentCategoryFilter)) currentCategoryFilter = '전체';
                 saveDataToFirebase();
-                showToast("품목이 삭제되었습니다.");
+                showToast("품목 삭제 완료");
             });
+        }
+
+        function exportHistoryToCSV() {
+            const dateVal = document.getElementById('selected-date').value;
+            const dataToExport = historyLogs[dateVal];
+            if (!dataToExport || dataToExport.length === 0) { showToast("내보낼 데이터가 없습니다.", "error"); return; }
+            
+            const BOM = "\uFEFF";
+            let csvContent = "카테고리,품목명,기준수량,현재수량,상태,당일입고\n";
+            dataToExport.forEach(item => {
+                csvContent += `"${item.category}","${item.name}",${item.standard},${item.current},"${item.current < item.standard ? "부족" : "정상"}",${item.inbound || 0}\n`;
+            });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' }));
+            link.download = `로봇카페_재고내역_${dateVal}.csv`;
+            link.click();
+            showToast("CSV 다운로드 완료");
         }
 
         function showToast(message, type = "success") {
             const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-msg');
+            document.getElementById('toast-msg').textContent = message;
             const icon = document.getElementById('toast-icon');
-            
-            toastMsg.textContent = message;
             
             if (type === "error") {
                 icon.className = "fa-solid fa-triangle-exclamation text-red-400 text-sm";
@@ -1152,14 +974,9 @@ function setupRealtimeSync() {
                 icon.className = "fa-solid fa-check-circle text-emerald-400 text-sm";
                 toast.classList.replace('border-red-500/50', 'border-slate-700');
             }
-
             toast.classList.remove('opacity-0', 'pointer-events-none');
             toast.classList.add('translate-y-[-10px]');
-            
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'pointer-events-none');
-                toast.classList.remove('translate-y-[-10px]');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('opacity-0', 'pointer-events-none'); toast.classList.remove('translate-y-[-10px]'); }, 3000);
         }
     </script>
 </body>
