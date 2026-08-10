@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>로봇카페 재고관리 앱 (고도화)</title>
+    <title>로봇카페 스마트 재고관리 앱 (고도화)</title>
     <!-- Tailwind CSS for modern styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome for icons -->
@@ -80,13 +80,8 @@
                 </div>
             </div>
 
-            <div id="category-filters" class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar">
-                <!-- Category buttons will be injected here -->
-            </div>
-
-            <div id="inventory-list" class="space-y-1.5">
-                <!-- Dynamic Items will be injected here -->
-            </div>
+            <div id="category-filters" class="flex gap-1.5 overflow-x-auto pb-1 hide-scrollbar"></div>
+            <div id="inventory-list" class="space-y-1.5"></div>
         </section>
 
         <!-- Tab 2: Calendar & History -->
@@ -96,8 +91,9 @@
                     <h2 class="font-bold text-slate-700 text-xs mb-1.5"><i class="fa-solid fa-calendar text-indigo-500 mr-1.5"></i>날짜 선택</h2>
                     <input type="date" id="selected-date" onchange="loadHistoryForDate()" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
-                <button onclick="exportHistoryToCSV()" class="h-[38px] px-3 bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm">
-                    <i class="fa-solid fa-file-csv"></i> 다운로드
+                <!-- 기존 CSV 다운로드 버튼을 전체 데이터 엑셀 다운로드 버튼으로 교체 -->
+                <button onclick="exportAllDataToExcel()" class="h-[38px] px-3 bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i> 전체 엑셀 백업
                 </button>
             </div>
 
@@ -215,19 +211,17 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // State Variables
         let inventoryData = []; 
         let historyLogs = {};   
-        let lastInboundResetDate = ""; // 날짜 변경 감지용 (당일 입고 리셋용)
+        let lastInboundResetDate = ""; 
         let currentCategoryFilter = '전체';
         let inventoryChart = null;
         let isFirebaseReady = false;
         
-        // History Edit States
         let editingHistoryDate = null;
         let editedHistoryData = [];
         let isHistoryEditMode = false;
-        let isTemplateMode = false; // 빈 날짜 직전데이터 연동 모드 판별
+        let isTemplateMode = false; 
         let templateSourceDate = null;
 
         window.switchTab = switchTab;
@@ -240,10 +234,10 @@
         window.removeItem = removeItem;
         window.updateStandard = updateStandard;
         window.loadHistoryForDate = loadHistoryForDate;
-        window.exportHistoryToCSV = exportHistoryToCSV;
+        window.exportAllDataToExcel = exportAllDataToExcel; // 전체 엑셀 백업 함수 연결
         window.setCategoryFilter = setCategoryFilter;
         window.updateHistoryQuantity = updateHistoryQuantity;
-        window.updateHistoryInbound = updateHistoryInbound; // 새 기능 연결
+        window.updateHistoryInbound = updateHistoryInbound; 
         window.saveEditedHistory = saveEditedHistory;
         window.toggleHistoryEditMode = toggleHistoryEditMode;
 
@@ -319,11 +313,20 @@
                     try {
                         if (data.inventoryString) inventoryData = JSON.parse(data.inventoryString);
                         if (data.historyString) historyLogs = JSON.parse(data.historyString);
+                        
+                        Object.keys(historyLogs).forEach(dateKey => {
+                            if (Array.isArray(historyLogs[dateKey])) {
+                                historyLogs[dateKey].forEach(it => {
+                                    if (!it.inbound || isNaN(it.inbound)) it.inbound = 0;
+                                });
+                            }
+                        });
+
                         hasValidData = true;
                     } catch(e) {}
 
                     if (!hasValidData) loadDefaultData();
-                    else checkDailyInboundReset(); // 새로운 날짜 진입 시 리셋 로직 발동
+                    else checkDailyInboundReset(); 
                     
                 } else {
                     loadDefaultData();
@@ -335,7 +338,6 @@
             });
         }
 
-        // 날짜가 변경되었을 때 당일 입고량(inbound)을 0으로 턴업 시키는 스마트 안전장치
         function checkDailyInboundReset() {
             const today = getTodayString();
             if (lastInboundResetDate !== today) {
@@ -346,10 +348,9 @@
                         changed = true;
                     }
                 });
-                lastInboundResetDate = today; // 리셋일자 갱신
+                lastInboundResetDate = today; 
                 if (changed) {
                     saveDataToFirebase();
-                    showToast("새로운 일자입니다. 당일 입고량이 0으로 초기화되었습니다.");
                 }
             }
             updateUIFromData();
@@ -376,7 +377,6 @@
         }
 
         function loadDefaultData() {
-            // 1. 현재 재고 현황 기본값 세팅
             inventoryData = [
                 { category: "원두", name: "타이틀", standard: 5, current: 2, inbound: 0 },
                 { category: "원두", name: "성수", standard: 5, current: 4, inbound: 0 },
@@ -389,7 +389,6 @@
                 { category: "파우더", name: "미숫가루", standard: 5, current: 3, inbound: 0 }
             ];
 
-            // 2. 과거 이력 데이터 기본 세팅 (8월 6일까지의 데이터 유지)
             historyLogs = {
                 "2026-07-31": [
                     { category: "원두", name: "타이틀", standard: 5, current: 8, inbound: 0 }, { category: "원두", name: "성수", standard: 5, current: 9, inbound: 0 }, { category: "시럽", name: "블랙티", standard: 2, current: 3, inbound: 0 }, { category: "시럽", name: "바닐라", standard: 2, current: 4, inbound: 0 }, { category: "시럽", name: "커피베이스", standard: 2, current: 4, inbound: 0 }, { category: "파우더", name: "농축밀크", standard: 7, current: 8, inbound: 0 }, { category: "파우더", name: "초코", standard: 5, current: 7, inbound: 0 }, { category: "파우더", name: "허니자몽", standard: 5, current: 8, inbound: 0 }, { category: "파우더", name: "미숫가루", standard: 5, current: 7, inbound: 0 }
@@ -415,12 +414,11 @@
             updateUIFromData();
         }
 
-        // 핵심 업데이트 1 & 2: 8/8 기준일 단절 및 동적 영업일 감지 로직 적용
+        // 시작 날짜를 7/31로 설정하여 더 넓은 범위의 소모량 분석 지원
         function analyzeConsumption() {
             const sortedDates = Object.keys(historyLogs).sort();
             if (sortedDates.length < 2) return null;
 
-            // 로직 1. 오염된 과거 데이터 단절을 위한 기준선 설정
             const CALC_START_DATE = "2026-07-31"; 
 
             let itemConsumption = {};
@@ -433,7 +431,6 @@
                 const date2Str = sortedDates[i];
                 const date1Str = sortedDates[i - 1];
                 
-                // 기준일 이전의 과거 데이터는 분석 루프에서 완전히 배제합니다.
                 if (date1Str < CALC_START_DATE) {
                     break; 
                 }
@@ -452,9 +449,7 @@
                     }
                 });
 
-                // 로직 2. 데이터가 존재하는 날짜의 간격은 요일에 상관없이 무조건 1영업일(휴무일 자동 스킵)로 간주
                 totalValidDays += 1;
-                
                 if (totalValidDays >= targetValidDays) break;
             }
 
@@ -496,7 +491,7 @@
             if (tabName === 'calendar') loadHistoryForDate();
         }
 
-        function renderCategoryFilters() { /* ... 생략 방지, 전체 포함 ... */
+        function renderCategoryFilters() {
             const filterContainer = document.getElementById('category-filters');
             if (!filterContainer) return;
             const categories = ['전체', ...new Set(inventoryData.map(item => item.category))];
@@ -569,7 +564,6 @@
             renderInventory(); 
         }
 
-        // 핵심 업데이트 3 & 4: 스마트 템플릿 도입 및 입고량 UI 분리
         function loadHistoryForDate() {
             const dateVal = document.getElementById('selected-date').value;
             const dateLabel = document.getElementById('history-date-label');
@@ -585,7 +579,6 @@
             const logsForDate = historyLogs[dateVal];
 
             if (!logsForDate || logsForDate.length === 0) {
-                // 데이터가 없는 날짜 선택 시: 과거 직전 데이터 탐색 로직 (스마트 템플릿)
                 const sortedDates = Object.keys(historyLogs).sort();
                 let closestPastDate = null;
                 for (let i = sortedDates.length - 1; i >= 0; i--) {
@@ -597,7 +590,6 @@
 
                 if (closestPastDate) {
                     editedHistoryData = JSON.parse(JSON.stringify(historyLogs[closestPastDate]));
-                    // 통계 오염 방지를 위해 직전 데이터의 '입고량'은 반드시 0으로 초기화
                     editedHistoryData.forEach(item => item.inbound = 0);
                     templateSourceDate = closestPastDate;
                 } else {
@@ -607,7 +599,7 @@
                 }
 
                 chartContainer.classList.add('hidden');
-                isHistoryEditMode = true; // 강제 편집 모드 진입
+                isHistoryEditMode = true; 
                 isTemplateMode = true;
 
                 if (editBtn) {
@@ -624,7 +616,6 @@
                 return;
             }
 
-            // 일반적인 정상 조회 모드
             editedHistoryData = JSON.parse(JSON.stringify(logsForDate));
             chartContainer.classList.remove('hidden');
             
@@ -646,7 +637,6 @@
             const historyList = document.getElementById('history-list');
             historyList.innerHTML = '';
             
-            // 템플릿 모드일 경우 안내 배너 노출
             if (isTemplateMode) {
                 historyList.innerHTML = `
                     <div class="bg-indigo-50 border border-indigo-200 p-2.5 rounded-lg mb-3 animate-pulse shadow-sm">
@@ -666,10 +656,8 @@
                 
                 let controlsHtml = '';
                 if (isHistoryEditMode) {
-                    // 편집 모드: 입고량(inbound)과 현재고(current) 입력을 명확한 UI로 분리
                     controlsHtml = `
                         <div class="flex flex-col gap-1.5 items-end w-32 shrink-0">
-                            <!-- 입고량 조절기 (구분을 위해 노란색 톤 사용) -->
                             <div class="flex items-center gap-1.5 bg-amber-50 px-1.5 py-1 rounded-md border border-amber-200 w-full justify-between shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
                                 <span class="text-[9px] text-amber-700 font-bold ml-1">입고</span>
                                 <div class="flex items-center">
@@ -678,7 +666,6 @@
                                     <button onclick="updateHistoryInbound(${idx}, 1)" class="w-5 h-5 bg-white border border-amber-300 rounded text-amber-700 flex items-center justify-center shadow-sm active:scale-95"><i class="fa-solid fa-plus text-[8px]"></i></button>
                                 </div>
                             </div>
-                            <!-- 현재고 조절기 -->
                             <div class="flex items-center gap-1.5 bg-white px-1.5 py-1 rounded-md border border-slate-300 w-full justify-between shadow-sm">
                                 <span class="text-[9px] text-slate-500 font-bold ml-1">재고</span>
                                 <div class="flex items-center">
@@ -689,11 +676,11 @@
                             </div>
                         </div>
                     `;
-               } else {
-                    // ★ 명확한 분기: 입고 데이터(inbound)가 명확히 존재하고 0보다 클 때만 뱃지를 생성합니다. 아예 변수를 비워버려 태그 자체가 남지 않습니다.
+                } else {
                     let inboundBadge = '';
-                    if (item.inbound !== undefined && item.inbound !== null && Number(item.inbound) > 0) {
-                        inboundBadge = `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shadow-sm mr-1.5">입고 +${item.inbound}</span>`;
+                    const inbVal = Number(item.inbound);
+                    if (!isNaN(inbVal) && inbVal > 0) {
+                        inboundBadge = `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold shadow-sm mr-1.5">입고 +${inbVal}</span>`;
                     }
 
                     controlsHtml = `
@@ -713,6 +700,82 @@
                 `;
                 historyList.appendChild(row);
             });
+        }
+
+        // 전체 데이터를 엑셀(.xls) 형식의 HTML 테이블 파일로 내보내는 기능
+        function exportAllDataToExcel() {
+            const dates = Object.keys(historyLogs).sort();
+            if (dates.length === 0) {
+                showToast("내보낼 이력 데이터가 없습니다.", "error");
+                return;
+            }
+
+            let htmlContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        table { border-collapse: collapse; width: 100%; }
+                        th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-family: 'Malgun Gothic', sans-serif; font-size: 11pt; }
+                        th { background-color: #4f46e5; color: #ffffff; font-weight: bold; }
+                        .title { font-size: 14pt; font-weight: bold; margin-bottom: 10px; text-align: left; }
+                    </style>
+                </head>
+                <body>
+                    <div class="title">로봇카페 전체 재고 및 이력 백업 데이터</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>날짜</th>
+                                <th>카테고리</th>
+                                <th>품목명</th>
+                                <th>기준수량</th>
+                                <th>현재수량</th>
+                                <th>당일입고</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            dates.forEach(dateStr => {
+                const logs = historyLogs[dateStr];
+                if (Array.isArray(logs)) {
+                    logs.forEach(item => {
+                        const status = item.current < item.standard ? "부족 (발주요망)" : "정상";
+                        htmlContent += `
+                            <tr>
+                                <td>${dateStr}</td>
+                                <td>${item.category}</td>
+                                <td>${item.name}</td>
+                                <td>${item.standard}</td>
+                                <td>${item.current}</td>
+                                <td>${item.inbound || 0}</td>
+                                <td>${status}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            });
+
+            htmlContent += `
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob(["\ufeff" + htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            const todayStr = getTodayString();
+            link.download = `로봇카페_전체재고_백업_${todayStr}.xls`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast("전체 데이터가 엑셀 파일로 다운로드되었습니다.");
         }
 
         function updateHistoryQuantity(idx, delta) {
@@ -741,7 +804,6 @@
         function saveEditedHistory() {
             if(!editingHistoryDate || !editedHistoryData) return;
             
-            // 검증 로직: 현재고가 0으로 남겨진 품목이 있는지 크로스체크
             const zeroItems = editedHistoryData.filter(item => item.current === 0);
             let confirmMsg = `${editingHistoryDate} 일자의 재고 기록을 저장하시겠습니까? (전체 동기화)`;
             
@@ -782,7 +844,7 @@
                 saveBtn.classList.add('flex');
             } else {
                 if (isTemplateMode) {
-                    loadHistoryForDate(); // 템플릿 취소 시 비어있는 초기화면으로 롤백
+                    loadHistoryForDate(); 
                     return;
                 }
                 editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> 수정';
@@ -798,7 +860,6 @@
             renderHistoryList();
         }
 
-        // --- 기타 공통 UI 유틸 함수 --- //
         function openBatchModal() {
             const modal = document.getElementById('batch-modal');
             const content = document.getElementById('batch-modal-content');
@@ -949,23 +1010,6 @@
                 saveDataToFirebase();
                 showToast("품목 삭제 완료");
             });
-        }
-
-        function exportHistoryToCSV() {
-            const dateVal = document.getElementById('selected-date').value;
-            const dataToExport = historyLogs[dateVal];
-            if (!dataToExport || dataToExport.length === 0) { showToast("내보낼 데이터가 없습니다.", "error"); return; }
-            
-            const BOM = "\uFEFF";
-            let csvContent = "카테고리,품목명,기준수량,현재수량,상태,당일입고\n";
-            dataToExport.forEach(item => {
-                csvContent += `"${item.category}","${item.name}",${item.standard},${item.current},"${item.current < item.standard ? "부족" : "정상"}",${item.inbound || 0}\n`;
-            });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' }));
-            link.download = `로봇카페_재고내역_${dateVal}.csv`;
-            link.click();
-            showToast("CSV 다운로드 완료");
         }
 
         function showToast(message, type = "success") {
